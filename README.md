@@ -306,8 +306,8 @@ Puntos identificados durante el análisis (útiles para evolución del proyecto)
 
 ### Funcionales / Calidad de código
 - **`GetBoolean("Estado")`**: requiere que la columna MySQL sea `TINYINT(1)`/`BIT`.
-- **`app.js`:** el listener del botón `btnPanelAdmin` está **dentro** de `mostrarLugares()` (se registra cada vez que se renderiza la lista). Sugerencia: moverlo al `DOMContentLoaded`.
-- **`admin.js`:** hay una verificación de token **duplicada** (líneas 3-8 y 22-26) — funciona, pero es redundante.
+- ✅ **`app.js` (RESUELTO):** el listener del botón `btnPanelAdmin` vive ahora en el `DOMContentLoaded` y se registra una sola vez (antes se acumulaba con cada búsqueda). Bonus añadido: la tecla Enter también dispara la búsqueda.
+- ✅ **`admin.js` (RESUELTO):** verificación de token única (guard clause), código muerto eliminado y un solo `DOMContentLoaded` concentrando todo el cableado de eventos.
 - **`Backend.http`** aún referencia `/weatherforecast` (endpoint de plantilla que no existe).
 - **Paginación:** `GET /api/lugares` devuelve todos los registros; convendría paginar (`LIMIT/OFFSET`).
 - **Manejo de errores global:** no hay middleware de excepciones ni `ProblemDetails`; sugerencia: `app.UseExceptionHandler()` o filtros.
