@@ -255,7 +255,7 @@ curl -X POST http://localhost:5080/api/lugares \
 ## 🔐 Autenticación con JWT
 
 1. El administrador inicia sesión en `login.html` → `login.js` envía `POST /api/auth/login`.
-2. Si las credenciales son válidas, el backend genera un **token JWT** firmado con HMAC-SHA256 (expira en **2 horas**).
+2. Si las credenciales son válidas (sección `AdminUser` de `appsettings.json`), el backend genera un **token JWT** firmado con HMAC-SHA256 (expira en **2 horas**). La clave, el Issuer y el Audience viven en la sección `Jwt` de `appsettings.json` — una sola fuente de verdad.
 3. El token se guarda en `localStorage` del navegador (`localStorage.setItem("token", ...)`).
 4. `admin.js` verifica que exista el token; si no, redirige a `login.html` (bloqueo de acceso directo por URL).
 5. Las peticiones de escritura (POST/PUT/DELETE) incluyen la cabecera `Authorization: Bearer <token>`.
@@ -286,7 +286,7 @@ curl -X POST http://localhost:5080/api/lugares \
 
 ## 🔑 Credenciales de Acceso
 
-> ⚠️ Credenciales de prueba definidas **directamente en el código** (`AuthController.cs`):
+> ⚠️ Credenciales de prueba definidas **en la configuración** (sección `AdminUser` de `appsettings.json`):
 
 | Usuario | Contraseña |
 |---|---|
@@ -299,8 +299,8 @@ curl -X POST http://localhost:5080/api/lugares \
 Puntos identificados durante el análisis (útiles para evolución del proyecto):
 
 ### Seguridad
-- **Credenciales hardcodeadas:** el login valida contra texto fijo en `AuthController.cs`. Sugerencia: tabla `Usuario` con contraseñas hasheadas (bcrypt/PBKDF2).
-- **Clave JWT hardcodeada:** `"TuClaveSecretaSuperSegura..."` está en `Program.cs` y `AuthController.cs`. Sugerencia: moverla a `appsettings.json` / variables de entorno (`builder.Configuration["Jwt:Key"]`).
+- ✅ **Clave JWT (RESUELTO):** ya no está en el código; vive en `appsettings.json` (sección `Jwt`) y tanto `Program.cs` como `AuthController.cs` leen de esa única fuente. Para producción: moverla a variables de entorno o user-secrets.
+- **Credenciales de admin en configuración:** el login compara contra la sección `AdminUser` de `appsettings.json`. Sugerencia futura: tabla `Usuario` en MySQL con contraseñas hasheadas (bcrypt/PBKDF2).
 - **CORS `AllowAll`:** acepta cualquier origen. En producción, restringir al dominio del frontend.
 - **Token sin validación de expiración en frontend:** si el token expira a mitad de sesión, la API devuelve `401` pero el panel no lo maneja (solo muestra un `alert` genérico). Sugerencia: capturar el 401 y redirigir al login.
 
