@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración - Turismo Sincelejo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header style="background-color: #1e293b; color: white; padding: 2rem 1rem; text-align: center; position: relative;">
+    
+    <h1 style="margin: 0; font-size: 2rem;">Panel de Gestión de Lugares</h1>
+    <p style="margin-top: 0.5rem; color: #94a3b8;">Módulo de Administración (CRUD) - Mantenimiento de sitios turísticos</p>
+
+    <!-- Contenedor para alinear los botones horizontalmente -->
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+        <a href="index.html" class="btn-secundario" style="text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: #334155; color: white; display: inline-flex; align-items: center; gap: 0.5rem;">
+            ⬅️ Volver a la Vista Pública
+        </a>
+        
+        <button id="btnCerrarSesion" style="padding: 0.5rem 1rem; border-radius: 6px; background: #ef4444; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s;">
+            🚪 Cerrar Sesión
+        </button>
+    </div>
+
+</header>
+
+    <main class="container">
+        <div class="admin-actions">
+            <h2>Lugares Registrados</h2>
+            <button id="btnNuevoLugar" class="btn-nuevo-lugar">+ Agregar Nuevo Lugar</button>
+        </div>
+
+        <!-- Tabla de Gestión CRUD -->
+        <div class="table-responsive">
+            <table class="tabla-admin">
+                <thead>
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Dirección</th>
+                        <th>Horario</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaLugaresBody">
+                    <!-- Los registros se cargan dinámicamente con JS -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Modal Formulario (Crear / Editar) -->
+    <div id="modalLugar" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+        <div class="modal-content">
+            <button type="button" id="btnCerrarModal" class="close" aria-label="Cerrar modal">&times;</button>
+            <h2 id="modalTitulo">Agregar Nuevo Lugar</h2>
+            
+            <form id="formLugar">
+                <input type="hidden" id="lugarId" value="0">
+
+                <div class="form-group">
+                    <label for="formNombre">Nombre del Lugar:</label>
+                    <input type="text" id="formNombre" required placeholder="Ej: Plaza Majagual">
+                </div>
+
+                <div class="form-group">
+                    <label for="formCategoria">Categoría:</label>
+                    <select id="formCategoria" required></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="formDescripcion">Descripción:</label>
+                    <textarea id="formDescripcion" rows="3" required placeholder="Breve historia o detalles del sitio..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="formDireccion">Dirección:</label>
+                    <input type="text" id="formDireccion" required placeholder="Ej: Carrera 17, Barrio Majagual">
+                </div>
+
+                <div class="form-group">
+                    <label for="formHorario">Horario:</label>
+                    <input type="text" id="formHorario" required placeholder="Ej: 08:00 AM - 06:00 PM">
+                </div>
+
+                <div class="form-group">
+                    <label for="formImagen">Ruta de Imagen:</label>
+                    <input type="text" id="formImagen" required placeholder="Ej: img/majagual.jpg">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="btnCancelarForm" class="btn-secundario">Cancelar</button>
+                    <button type="submit" class="btn-primario">Guardar Lugar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

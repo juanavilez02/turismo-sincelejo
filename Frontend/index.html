@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turismo en Sincelejo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header style="position: relative; padding: 2rem 1rem;">
+    <!-- Botón ubicado arriba a la derecha -->
+    <a id="btnPanelAdmin" class="btn-admin-link" style="position: absolute; top: 1rem; right: 1rem; cursor: pointer; text-decoration: none;">
+        ⚙️ Panel de Administración
+    </a>
+
+    <!-- Contenido centrado del encabezado -->
+    <div class="header-content" style="text-align: center; max-width: 800px; margin: 0 auto;">
+        <h1>Descubre Sincelejo</h1>
+        <p>Conoce los lugares más emblemáticos, culturales y gastronómicos de la capital de Sucre</p>
+    </div>
+</header>
+
+    <main class="container">
+        <!-- Sección de Filtros -->
+        <section class="filtros-section">
+            <input type="text" id="inputBuscar" placeholder="Buscar lugar por nombre...">
+            
+            <select id="selectCategoria">
+                <option value="0">Todas las categorías</option>
+            </select>
+
+            <button id="btnBuscar">Buscar</button>
+        </section>
+
+        <!-- Grid de Tarjetas para el Turista -->
+        <section class="grid-container" id="gridLugares">
+            <!-- Las tarjetas se generan dinámicamente con JS -->
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

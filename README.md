@@ -1,0 +1,326 @@
+# 🌴 Turismo en Sincelejo — Plataforma Web
+
+Aplicación web para la promoción turística de Sincelejo (capital de Sucre, Colombia). Permite a los **turistas** consultar lugares emblemáticos de la ciudad (con búsqueda y filtros por categoría) y a los **administradores** gestionar el contenido mediante un panel CRUD protegido con autenticación JWT.
+
+---
+
+## 📑 Tabla de Contenidos
+
+- [Descripción General](#-descripción-general)
+- [Tecnologías Utilizadas](#-tecnologías-utilizadas)
+- [Arquitectura del Proyecto](#-arquitectura-del-proyecto)
+- [Estructura de Carpetas](#-estructura-de-carpetas)
+- [Requisitos Previos](#-requisitos-previos)
+- [Instalación y Ejecución](#-instalación-y-ejecución)
+- [Base de Datos](#-base-de-datos)
+- [API REST — Endpoints](#-api-rest--endpoints)
+- [Autenticación con JWT](#-autenticación-con-jwt)
+- [Vistas del Frontend](#-vistas-del-frontend)
+- [Credenciales de Acceso](#-credenciales-de-acceso)
+- [Observaciones y Mejoras Futuras](#-observaciones-y-mejoras-futuras)
+
+---
+
+## 📖 Descripción General
+
+El sistema está compuesto por dos módulos principales:
+
+| Módulo | Descripción | Público |
+|---|---|---|
+| **Vista Pública** | Catálogo de lugares turísticos con tarjetas, búsqueda por nombre, filtro por categoría y enlace a Google Maps ("Cómo llegar"). | Turistas (sin registro) |
+| **Panel de Administración** | CRUD completo de lugares (crear, leer, actualizar, eliminar) mediante tabla y formulario modal. Requiere inicio de sesión con JWT. | Administradores |
+
+**Flujo de la aplicación:**
+
+```
+┌─────────────┐      login (admin/123456)      ┌──────────────┐
+│  login.html │ ─────────────────────────────► │  auth API    │
+└─────────────┘                                 │ (emite JWT)  │
+      ▲                                         └──────┬───────┘
+      │ almacena token en localStorage                 │
+      │                                                ▼
+┌─────────────┐   GET /api/lugares (público)   ┌──────────────┐        ┌──────────┐
+│  index.html │ ◄───────────────────────────── │              │ ◄────► │  MySQL   │
+│  (turista)  │                                │  Backend     │        │ lugares  │
+└─────────────┘                                 │  .NET 10     │        │sincelejo │
+      │                                         │  (API REST)  │        └──────────┘
+      │ acceso al panel                        └──────▲───────┘
+      ▼                                                │
+┌─────────────┐   POST/PUT/DELETE + Bearer Token       │
+│  admin.html │ ─────────────────────────────────────┘
+│  (CRUD)     │
+└─────────────┘
+```
+
+---
+
+## 🛠 Tecnologías Utilizadas
+
+### Backend
+| Tecnología | Versión | Uso |
+|---|---|---|
+| **ASP.NET Core Web API** | .NET 10 (`net10.0`) | Framework del servidor REST |
+| **MySQL** (vía `MySql.Data`) | 26.7.0 | Conexión a la base de datos `lugaressincelejo` |
+| **JWT Bearer** | 10.0.12 / 8.23.0 | Autenticación por tokens |
+| **Microsoft.AspNetCore.OpenApi** | 10.0.12 | Soporte OpenAPI/Swagger |
+
+### Frontend
+| Tecnología | Uso |
+|---|---|
+| **HTML5 / CSS3** (`styles.css`) | Estructura y estilos (diseño responsivo con Grid/Flexbox) |
+| **JavaScript** (vanilla, ES6+ con `fetch` y `async/await`) | Consumo de la API y manipulación del DOM |
+| **Google Maps** (enlace externo) | Botón "Cómo llegar" en cada lugar |
+
+---
+
+## 🏗 Arquitectura del Proyecto
+
+Arquitectura **cliente-servidor** desacoplada:
+
+- **Backend**: API REST que expone los recursos `Lugares`, `Categorias` y `Auth`. Usa ADO.NET directo (`MySqlConnection`/`MySqlCommand`) con **consultas parametrizadas** (`@parametros`) para prevenir inyección SQL.
+- **Frontend**: Aplicación estática (sin framework ni build) que se comunica con la API vía `fetch` a `http://localhost:5080/api`.
+- **Archivos estáticos**: El backend sirve la carpeta `Frontend/img` en la ruta `/img`, de modo que las imágenes de los lugares también pueden resolverse desde el servidor.
+
+---
+
+## 📁 Estructura de Carpetas
+
+```
+ProyectoSincelejo/
+├── Backend/                          # API REST (ASP.NET Core .NET 10)
+│   ├── Controllers/
+│   │   ├── AuthController.cs         # Login y generación de JWT
+│   │   └── LugaresController.cs      # CRUD de Lugares + Categorías (GET)
+│   ├── Properties/
+│   │   └── launchSettings.json       # Puertos: 5080 (HTTP) / 7268 (HTTPS)
+│   ├── appsettings.json              # Cadena de conexión MySQL
+│   ├── Backend.csproj                # Dependencias NuGet
+│   ├── Backend.http                 # Archivo de pruebas HTTP
+│   └── Program.cs                   # Configuración (CORS, JWT, static files)
+│
+└── Frontend/                         # SPA estática (HTML + CSS + JS)
+    ├── img/                          # Imágenes de los lugares
+    │   ├── catedral.jpg
+    │   ├── guacari.jpg
+    │   ├── majagual.jpg
+    │   ├── museo.jpg
+    │   ├── pozo.jpg
+    │   └── santander.jpg
+    ├── index.html                    # Vista pública (turista)
+    ├── app.js                        # Lógica: búsqueda, filtros, tarjetas
+    ├── login.html                    # Vista de acceso administrativo
+    ├── login.js                      # Lógica: autenticación y guardado del token
+    ├── admin.html                    # Panel de administración (CRUD)
+    ├── admin.js                      # Lógica: tabla, modal, guardar/eliminar
+    └── styles.css                     # Estilos globales (responsive)
+```
+
+---
+
+## ✅ Requisitos Previos
+
+- **.NET SDK 10** o superior — [descargar](https://dotnet.microsoft.com/download)
+- **MySQL Server 8.x** en ejecución (por defecto en `localhost:3306`)
+- Un navegador web moderno (Chrome, Edge, Firefox…)
+- (Opcional) **Visual Studio 2022+** o **VS Code** con la extensión C#
+
+---
+
+## 🚀 Instalación y Ejecución
+
+### 1. Preparar la base de datos MySQL
+
+Crea el esquema y las tablas (ver sección [Base de Datos](#-base-de-datos)):
+
+```sql
+CREATE DATABASE lugaressincelejo;
+```
+
+Si tu usuario o contraseña de MySQL son distintos, ajústalos en `Backend/appsettings.json`:
+
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=localhost;Port=3306;Database=lugaressincelejo;User=root;Password=TU_PASSWORD;"
+}
+```
+
+### 2. Ejecutar el Backend
+
+```bash
+cd Backend
+dotnet run
+```
+
+La API quedará disponible en **`http://localhost:5080`** (perfil HTTP).
+
+> 💡 Con el perfil HTTPS la app escucha en `https://localhost:7268` y `http://localhost:5080`.
+
+### 3. Ejecutar el Frontend
+
+Al ser archivos estáticos, basta con abrir `Frontend/index.html` en el navegador, o servir la carpeta con cualquier servidor estático, por ejemplo con la extensión **Live Server** de VS Code.
+
+> ⚠️ **Importante:** los archivos JS apuntan a `const API_URL = "http://localhost:5080/api"`. Si el backend corre en otro puerto, actualiza esta constante en `app.js`, `login.js` y `admin.js`.
+
+---
+
+## 🗄 Base de Datos
+
+Base de datos: **`lugaressincelejo`** (MySQL). Script de referencia:
+
+```sql
+CREATE TABLE Categoria (
+    IdCategoria INT PRIMARY KEY AUTO_INCREMENT,
+    Nombre      VARCHAR(100) NOT NULL,
+    Descripcion VARCHAR(255)
+);
+
+CREATE TABLE Lugar (
+    IdLugar      INT PRIMARY KEY AUTO_INCREMENT,
+    IdCategoria  INT NOT NULL,
+    Nombre       VARCHAR(150) NOT NULL,
+    Descripcion  TEXT,
+    Direccion    VARCHAR(255),
+    Imagen       VARCHAR(255),       -- Ej: img/majagual.jpg
+    Horario      VARCHAR(100),
+    Estado       TINYINT(1) DEFAULT 1,
+    FOREIGN KEY (IdCategoria) REFERENCES Categoria(IdCategoria)
+);
+```
+
+**Relación:** `Lugar.IdCategoria` → `Categoria.IdCategoria` (N:1). Las consultas usan `INNER JOIN` para mostrar el nombre de la categoría en cada lugar.
+
+---
+
+## 🔌 API REST — Endpoints
+
+Base URL: `http://localhost:5080/api`
+
+### Autenticación
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| `POST` | `/api/auth/login` | ❌ Pública | Valida credenciales y devuelve un JWT (válido 2 horas) |
+
+**Request:**
+```json
+{ "usuario": "admin", "password": "123456" }
+```
+
+**Response (200 OK):**
+```json
+{ "token": "eyJhbGciOi..." }
+```
+
+**Response (401 Unauthorized):** `"Usuario o contraseña incorrectos"`
+
+### Categorías
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| `GET` | `/api/categorias` | ❌ Pública | Lista todas las categorías (`idCategoria`, `nombre`, `descripcion`) |
+
+### Lugares
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| `GET` | `/api/lugares` | ❌ Pública | Lista todos los lugares. Filtros opcionales por query string |
+| `GET` | `/api/lugares?buscar=texto` | ❌ Pública | Búsqueda por nombre (`LIKE %texto%`) |
+| `GET` | `/api/lugares?idCategoria=1` | ❌ Pública | Filtra por categoría (si `idCategoria > 0`) |
+| `POST` | `/api/lugares` | ✅ **Bearer Token** | Crea un lugar (Estado = 1 por defecto) |
+| `PUT` | `/api/lugares/{id}` | ✅ **Bearer Token** | Actualiza un lugar por `IdLugar` |
+| `DELETE` | `/api/lugares/{id}` | ✅ **Bearer Token** | Elimina un lugar por `IdLugar` |
+
+**Body para POST/PUT (`LugarModel`):**
+```json
+{
+  "idCategoria": 1,
+  "nombre": "Plaza Majagual",
+  "descripcion": "Icónica plaza del barrio Majagual...",
+  "direccion": "Carrera 17, Barrio Majagual",
+  "imagen": "img/majagual.jpg",
+  "horario": "08:00 AM - 06:00 PM"
+}
+```
+
+**Ejemplo con token (cURL):**
+```bash
+curl -X POST http://localhost:5080/api/lugares \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN_AQUI" \
+  -d '{"idCategoria":1,"nombre":"Nuevo lugar","descripcion":"...","direccion":"...","imagen":"img/nuevo.jpg","horario":"..."}'
+```
+
+---
+
+## 🔐 Autenticación con JWT
+
+1. El administrador inicia sesión en `login.html` → `login.js` envía `POST /api/auth/login`.
+2. Si las credenciales son válidas, el backend genera un **token JWT** firmado con HMAC-SHA256 (expira en **2 horas**).
+3. El token se guarda en `localStorage` del navegador (`localStorage.setItem("token", ...)`).
+4. `admin.js` verifica que exista el token; si no, redirige a `login.html` (bloqueo de acceso directo por URL).
+5. Las peticiones de escritura (POST/PUT/DELETE) incluyen la cabecera `Authorization: Bearer <token>`.
+6. El backend valida el token con `[Authorize]` antes de ejecutar los cambios. Al **cerrar sesión**, el token se elimina de `localStorage`.
+
+---
+
+## 🖼 Vistas del Frontend
+
+### `index.html` — Vista Pública (Turista)
+- **Filtros:** cuadro de búsqueda por nombre + selector de categorías (cargado dinámicamente desde `/api/categorias`).
+- **Grid de tarjetas:** cada tarjeta muestra imagen (con *fallback* a `picsum.photos` si la imagen falla), badge de categoría, descripción, dirección y horario.
+- **Botón "🗺️ Cómo llegar":** abre Google Maps con la ubicación del lugar en una pestaña nueva.
+- **Acceso al panel:** botón "⚙️ Panel de Administración" en el encabezado.
+
+### `login.html` — Acceso Administrativo
+- Formulario de usuario/contraseña con validación HTML5.
+- Muestra errores (`401` o fallo de conexión) mediante un mensaje estilizado.
+
+### `admin.html` — Panel de Administración (CRUD)
+- **Tabla de lugares:** miniatura de imagen, nombre, categoría, dirección, horario y acciones.
+- **Modal formulario:** crear (`lugarId = 0` → POST) o editar (`lugarId > 0` → PUT).
+- **Eliminar:** con ventana de confirmación `confirm()` antes del DELETE.
+- **Cerrar sesión:** borra el token y regresa a la vista pública.
+- **Protegida:** redirige a `login.html` si no hay token.
+
+---
+
+## 🔑 Credenciales de Acceso
+
+> ⚠️ Credenciales de prueba definidas **directamente en el código** (`AuthController.cs`):
+
+| Usuario | Contraseña |
+|---|---|
+| `admin` | `123456` |
+
+---
+
+## ⚠️ Observaciones y Mejoras Futuras
+
+Puntos identificados durante el análisis (útiles para evolución del proyecto):
+
+### Seguridad
+- **Credenciales hardcodeadas:** el login valida contra texto fijo en `AuthController.cs`. Sugerencia: tabla `Usuario` con contraseñas hasheadas (bcrypt/PBKDF2).
+- **Clave JWT hardcodeada:** `"TuClaveSecretaSuperSegura..."` está en `Program.cs` y `AuthController.cs`. Sugerencia: moverla a `appsettings.json` / variables de entorno (`builder.Configuration["Jwt:Key"]`).
+- **CORS `AllowAll`:** acepta cualquier origen. En producción, restringir al dominio del frontend.
+- **Token sin validación de expiración en frontend:** si el token expira a mitad de sesión, la API devuelve `401` pero el panel no lo maneja (solo muestra un `alert` genérico). Sugerencia: capturar el 401 y redirigir al login.
+
+### Funcionales / Calidad de código
+- **`GetBoolean("Estado")`**: requiere que la columna MySQL sea `TINYINT(1)`/`BIT`.
+- **`app.js`:** el listener del botón `btnPanelAdmin` está **dentro** de `mostrarLugares()` (se registra cada vez que se renderiza la lista). Sugerencia: moverlo al `DOMContentLoaded`.
+- **`admin.js`:** hay una verificación de token **duplicada** (líneas 3-8 y 22-26) — funciona, pero es redundante.
+- **`Backend.http`** aún referencia `/weatherforecast` (endpoint de plantilla que no existe).
+- **Paginación:** `GET /api/lugares` devuelve todos los registros; convendría paginar (`LIMIT/OFFSET`).
+- **Manejo de errores global:** no hay middleware de excepciones ni `ProblemDetails`; sugerencia: `app.UseExceptionHandler()` o filtros.
+- **Carga de imágenes:** actualmente se escribe la ruta manualmente (`img/x.jpg`); una mejora natural sería un endpoint de subida de archivos (multipart/form-data).
+
+---
+
+## 👥 Autores
+
+Proyecto académico — *Desarrollo Web* (2026-2).
+
+---
+```
+
+Documento generado a partir del análisis del código fuente de `Backend/` y `Frontend/`.
+```

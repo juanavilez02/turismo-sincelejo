@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build Backend API",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"Backend.csproj",
+				"--no-restore"
+			],
+			"isBackground": false,
+			"problemMatcher": [
+				"$msCompile"
+			]
+		}
+	]
+}

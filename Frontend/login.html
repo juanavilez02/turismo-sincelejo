@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Administrativo - Turismo Sincelejo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="login-body">
+
+    <div class="login-card">
+        <div class="login-header">
+            <span class="login-icon">🔐</span>
+            <h2>Acceso Administrativo</h2>
+            <p>Ingresa tus credenciales para gestionar la plataforma</p>
+        </div>
+
+        <form id="formLogin">
+            <div class="form-group">
+                <label for="usuario">Usuario</label>
+                <input type="text" id="usuario" placeholder="Ej: admin" required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <div id="mensajeError" class="alert-error" style="display: none;"></div>
+
+            <button type="submit" class="btn-login">Ingresar al Panel</button>
+        </form>
+
+        <div class="login-footer">
+            <a href="index.html" class="btn-volver-link">⬅️ Volver a la vista pública</a>
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>
