@@ -1,6 +1,32 @@
 @Backend_HostAddress = http://localhost:5080
 
-GET {{Backend_HostAddress}}/weatherforecast/
+### 1. Login: devuelve el token JWT (copia el token para los pasos siguientes)
+POST {{Backend_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "usuario": "admin",
+  "password": "123456"
+}
+
+### 2. Lugares (publico, con filtro de busqueda opcional)
+GET {{Backend_HostAddress}}/api/lugares?buscar=majagual
 Accept: application/json
 
-###
+### 3. Categorias (publico)
+GET {{Backend_HostAddress}}/api/categorias
+Accept: application/json
+
+### 4. Crear lugar (requiere token: reemplaza TU_TOKEN_AQUI por el del paso 1)
+POST {{Backend_HostAddress}}/api/lugares
+Authorization: Bearer TU_TOKEN_AQUI
+Content-Type: application/json
+
+{
+  "idCategoria": 1,
+  "nombre": "Nuevo lugar de prueba",
+  "descripcion": "Descripcion del sitio",
+  "direccion": "Calle 123",
+  "imagen": "img/pozo.jpg",
+  "horario": "08:00 AM - 06:00 PM"
+}

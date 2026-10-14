@@ -195,6 +195,8 @@ CREATE TABLE Lugar (
 
 Base URL: `http://localhost:5080/api`
 
+> 🎛️ **Panel interactivo (Swagger UI):** `http://localhost:5080/swagger` — documentación viva de la API, con botón **Authorize** para probar los endpoints protegidos pegando el token JWT.
+
 ### Autenticación
 
 | Método | Ruta | Autenticación | Descripción |
@@ -308,7 +310,7 @@ Puntos identificados durante el análisis (útiles para evolución del proyecto)
 - **`GetBoolean("Estado")`**: requiere que la columna MySQL sea `TINYINT(1)`/`BIT`.
 - ✅ **`app.js` (RESUELTO):** el listener del botón `btnPanelAdmin` vive ahora en el `DOMContentLoaded` y se registra una sola vez (antes se acumulaba con cada búsqueda). Bonus añadido: la tecla Enter también dispara la búsqueda.
 - ✅ **`admin.js` (RESUELTO):** verificación de token única (guard clause), código muerto eliminado y un solo `DOMContentLoaded` concentrando todo el cableado de eventos.
-- **`Backend.http`** aún referencia `/weatherforecast` (endpoint de plantilla que no existe).
+- ✅ **`Backend.http` (RESUELTO):** ahora contiene solicitudes reales de la API (login, lugares, categorías y creación con token) listas para ejecutar desde VS Code.
 - **Paginación:** `GET /api/lugares` devuelve todos los registros; convendría paginar (`LIMIT/OFFSET`).
 - **Manejo de errores global:** no hay middleware de excepciones ni `ProblemDetails`; sugerencia: `app.UseExceptionHandler()` o filtros.
 - **Carga de imágenes:** actualmente se escribe la ruta manualmente (`img/x.jpg`); una mejora natural sería un endpoint de subida de archivos (multipart/form-data).

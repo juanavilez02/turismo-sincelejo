@@ -1,12 +1,53 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Registrar los controladores en el contenedor de dependencias
 builder.Services.AddControllers();
+
+// ============================================================
+// SWAGGER / OPENAPI: el "menú" de la API.
+// Genera un documento que la describe (endpoints, parámetros,
+// respuestas) y luego lo servimos como panel interactivo.
+// ============================================================
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "API Turismo Sincelejo",
+        Version = "v1",
+        Description = "API REST del portal turistico de Sincelejo. Lugares y categorias con autenticacion JWT."
+    });
+
+    // Boton "Authorize" 🔒: permite pegar el token JWT y probar
+    // los endpoints protegidos (POST/PUT/DELETE) desde el panel.
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Pega tu token JWT SIN la palabra 'Bearer'. Consíguelo en POST /api/auth/login."
+    });
+
+    // En Microsoft.OpenApi v2 las referencias usan OpenApiSecuritySchemeReference
+    // (el viejo OpenApiReference/Reference ya no existe).
+    // Parametros: (referenceId, hostDocument, externalResource) -> local: null, null.
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        {
+            // El lambda nos entrega el documento real de la API: se lo damos
+            // a la referencia (hostDocument) para que apunte al esquema "Bearer".
+            new OpenApiSecuritySchemeReference("Bearer", document, null),
+            new List<string>()
+        }
+    });
+});
 
 // Habilitar política CORS
 builder.Services.AddCors(options =>
@@ -40,6 +81,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 var app = builder.Build();
 
 app.UseCors("AllowAll");
+
+// ============================================================
+// SWAGGER: el panel de pruebas de la API.
+// En un producto real se suele limitar solo a desarrollo:
+//   if (app.Environment.IsDevelopment()) { app.UseSwagger(); app.UseSwaggerUI(); }
+// Aqui lo dejamos siempre visible para poder demostrarlo.
+// ============================================================
+app.UseSwagger();   // genera el documento "menu" (/swagger/v1/swagger.json)
+app.UseSwaggerUI(); // sirve la carta interactiva en /swagger
 
 var imageDirectory = Path.GetFullPath(
     Path.Combine(builder.Environment.ContentRootPath, "..", "Frontend", "img"));
