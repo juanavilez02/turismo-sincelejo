@@ -10,11 +10,24 @@ namespace Backend.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
+
+        // Inyección de dependencias: .NET nos entrega la configuración al crear el controlador.
+        // Es el mismo patrón que ya usaba LugaresController con la cadena de conexión.
+        public AuthController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginDto login)
         {
-            // ⚠️ En un proyecto real validas contra MySQL. Para prueba rápida:
-            if (login.Usuario == "admin" && login.Password == "123456")
+            // Las credenciales ahora viven en appsettings.json (sección "AdminUser").
+            // ⚠️ En un proyecto real se valida contra MySQL con contraseñas hasheadas (BCrypt).
+            var usuarioValido = _configuration["AdminUser:Usuario"];
+            var passwordValida = _configuration["AdminUser:Password"];
+
+            if (login.Usuario == usuarioValido && login.Password == passwordValida)
             {
                 var token = GenerarJwtToken(login.Usuario);
                 return Ok(new { token });
@@ -25,12 +38,16 @@ namespace Backend.Controllers
 
         private string GenerarJwtToken(string usuario)
         {
-            var key = Encoding.UTF8.GetBytes("TuClaveSecretaSuperSeguraDeAlmenos32Caracteres!");
+            // La MISMA clave de appsettings.json que usa Program.cs para validar.
+            // Ya no hay duplicados: una sola fuente de verdad en toda la app.
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
             var claims = new[] { new Claim(ClaimTypes.Name, usuario) };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"],
                 Expires = DateTime.UtcNow.AddHours(2), // El token dura 2 horas
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };

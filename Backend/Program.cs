@@ -19,7 +19,10 @@ builder.Services.AddCors(options =>
     });
 });
 // Configuración de Autenticación con JWT
-var key = Encoding.UTF8.GetBytes("TuClaveSecretaSuperSeguraDeAlmenos32Caracteres!"); // Usa una clave larga
+// La clave secreta ahora vive en appsettings.json (sección "Jwt"), no en el código.
+// Un solo lugar donde guardarla = una sola fuente de verdad.
+var jwtKey = builder.Configuration["Jwt:Key"];
+var key = Encoding.UTF8.GetBytes(jwtKey!);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -28,8 +31,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false,
-            ValidateAudience = false
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"]
         };
     });
 var app = builder.Build();
