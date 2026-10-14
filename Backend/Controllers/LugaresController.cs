@@ -16,14 +16,15 @@ namespace Backend.Controllers
         }
 
         // 1. OBTENER LUGARES (GET)
+        // async: mientras MySQL responde, este hilo queda libre para atender otras peticiones.
         [HttpGet]
-        public IActionResult GetLugares([FromQuery] string? buscar, [FromQuery] int? idCategoria)
+        public async Task<IActionResult> GetLugaresAsync([FromQuery] string? buscar, [FromQuery] int? idCategoria)
         {
             var lista = new List<object>();
 
             using (var con = new MySqlConnection(_connectionString))
             {
-                con.Open();
+                await con.OpenAsync();
                 string sql = @"SELECT l.IdLugar, l.Nombre, l.Descripcion, l.Direccion, l.Imagen, l.Horario, l.Estado, c.Nombre AS Categoria, l.IdCategoria 
                                FROM Lugar l 
                                INNER JOIN Categoria c ON l.IdCategoria = c.IdCategoria 
@@ -43,9 +44,12 @@ namespace Backend.Controllers
                     if (idCategoria.HasValue && idCategoria > 0)
                         cmd.Parameters.AddWithValue("@idCategoria", idCategoria.Value);
 
-                    using (var reader = cmd.ExecuteReader())
+                    // ExecuteReaderAsync devuelve el tipo genérico (DbDataReader). Hacemos cast al
+                    // tipo concreto de MySQL, que es el que implementa los accesores por nombre:
+                    // GetInt32("Nombre"). El cast es seguro: MySql.Data siempre devuelve este tipo.
+                    using (var reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             lista.Add(new
                             {
@@ -70,11 +74,11 @@ namespace Backend.Controllers
         // 2. CREAR LUGAR (POST)
         [Authorize]
         [HttpPost]
-        public IActionResult CrearLugar([FromBody] LugarModel model)
+        public async Task<IActionResult> CrearLugarAsync([FromBody] LugarModel model)
         {
             using (var con = new MySqlConnection(_connectionString))
             {
-                con.Open();
+                await con.OpenAsync();
                 string sql = @"INSERT INTO Lugar (IdCategoria, Nombre, Descripcion, Direccion, Imagen, Horario, Estado) 
                                VALUES (@IdCategoria, @Nombre, @Descripcion, @Direccion, @Imagen, @Horario, 1)";
 
@@ -87,7 +91,7 @@ namespace Backend.Controllers
                     cmd.Parameters.AddWithValue("@Imagen", model.Imagen);
                     cmd.Parameters.AddWithValue("@Horario", model.Horario);
 
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
 
@@ -97,11 +101,11 @@ namespace Backend.Controllers
         // 3. EDITAR LUGAR (PUT)
         [Authorize]
         [HttpPut("{id}")]
-        public IActionResult EditarLugar(int id, [FromBody] LugarModel model)
+        public async Task<IActionResult> EditarLugarAsync(int id, [FromBody] LugarModel model)
         {
             using (var con = new MySqlConnection(_connectionString))
             {
-                con.Open();
+                await con.OpenAsync();
                 string sql = @"UPDATE Lugar 
                                SET IdCategoria = @IdCategoria, Nombre = @Nombre, Descripcion = @Descripcion, 
                                    Direccion = @Direccion, Imagen = @Imagen, Horario = @Horario 
@@ -117,7 +121,7 @@ namespace Backend.Controllers
                     cmd.Parameters.AddWithValue("@Imagen", model.Imagen);
                     cmd.Parameters.AddWithValue("@Horario", model.Horario);
 
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
 
@@ -127,17 +131,17 @@ namespace Backend.Controllers
         // 4. ELIMINAR LUGAR (DELETE)
         [Authorize]
         [HttpDelete("{id}")]
-        public IActionResult EliminarLugar(int id)
+        public async Task<IActionResult> EliminarLugarAsync(int id)
         {
             using (var con = new MySqlConnection(_connectionString))
             {
-                con.Open();
+                await con.OpenAsync();
                 string sql = "DELETE FROM Lugar WHERE IdLugar = @IdLugar";
 
                 using (var cmd = new MySqlCommand(sql, con))
                 {
                     cmd.Parameters.AddWithValue("@IdLugar", id);
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
 
@@ -158,19 +162,20 @@ namespace Backend.Controllers
 
         // OBTENER CATEGORÍAS (GET)
         [HttpGet]
-        public IActionResult GetCategorias()
+        public async Task<IActionResult> GetCategoriasAsync()
         {
             var categorias = new List<object>();
 
             using (var con = new MySqlConnection(_connectionString))
             {
-                con.Open();
+                await con.OpenAsync();
                 string sql = "SELECT IdCategoria, Nombre, Descripcion FROM Categoria";
 
                 using (var cmd = new MySqlCommand(sql, con))
-                using (var reader = cmd.ExecuteReader())
+                // Cast al tipo concreto: ver comentario en GetLugaresAsync.
+                using (var reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         categorias.Add(new
                         {
