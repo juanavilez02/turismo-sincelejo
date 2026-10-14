@@ -4,7 +4,23 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarCategorias();
     cargarLugares();
 
+    // Regla de oro del frontend: TODO el cableado de eventos se registra
+    // UNA sola vez, en la fase de arranque. La fase de render (mostrarLugares)
+    // solo dibuja; si registrara listeners, se acumularian duplicados.
     document.getElementById("btnBuscar").addEventListener("click", cargarLugares);
+
+    // Bonus de usabilidad: la tecla Enter en el cuadro de busqueda tambien busca.
+    document.getElementById("inputBuscar").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") cargarLugares();
+    });
+
+    // Acceso al panel de administracion. Antes este listener vivia DENTRO de
+    // mostrarLugares(): cada busqueda le sumaba un listener nuevo al mismo boton.
+    document.getElementById("btnPanelAdmin").addEventListener("click", (e) => {
+        e.preventDefault();
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+    });
 });
 
 async function cargarCategorias() {
@@ -80,14 +96,4 @@ function mostrarLugares(lugares) {
 
         contenedor.appendChild(card);
     });
-const btnPanelAdmin = document.getElementById("btnPanelAdmin");
-
-if (btnPanelAdmin) {
-    btnPanelAdmin.addEventListener("click", (e) => {
-        e.preventDefault();
-        localStorage.removeItem("token");
-        window.location.href = "login.html";
-    });
-}
-
 }

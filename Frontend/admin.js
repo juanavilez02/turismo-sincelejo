@@ -1,39 +1,33 @@
 const API_URL = "http://localhost:5080/api";
-// 🔒 VERIFICACIÓN DE SEGURIDAD
+
+// 🔒 VERIFICACIÓN DE SEGURIDAD (guard clause): si no hay token guardado,
+// expulsamos al visitante al login ANTES de ejecutar cualquier otra cosa.
 const token = localStorage.getItem("token");
 
-// Si NO existe el token guardado, lo expulsamos al Login
 if (!token) {
     window.location.href = "login.html";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const btnCerrarSesion = document.getElementById("btnCerrarSesion");
-    
-    if (btnCerrarSesion) {
-        btnCerrarSesion.addEventListener("click", () => {
-            // Borra la pulsera guardada
-            localStorage.removeItem("token");
-            // Redirige al login
-            window.location.href = "index.html";
-        });
-    }
-});
-// Código al inicio de admin.js
-//const token = localStorage.getItem('token');
-if (!token) {
-    window.location.href = 'login.html'; // Bloquea el acceso directo por URL
-}
-
-document.addEventListener("DOMContentLoaded", () => {
+    // Carga inicial de datos
     cargarCategoriasForm();
     cargarTablaLugares();
 
-    // Eventos Modal
+    // Cableado de eventos: todo en UN solo lugar y registrado UNA sola vez.
+    // (Antes habia dos DOMContentLoaded y la verificacion de token duplicada.)
     document.getElementById("btnNuevoLugar").addEventListener("click", abrirModalCrear);
     document.getElementById("btnCerrarModal").addEventListener("click", cerrarModal);
     document.getElementById("btnCancelarForm").addEventListener("click", cerrarModal);
     document.getElementById("formLugar").addEventListener("submit", guardarLugar);
+
+    const btnCerrarSesion = document.getElementById("btnCerrarSesion");
+    if (btnCerrarSesion) {
+        btnCerrarSesion.addEventListener("click", () => {
+            // Borra la pulsera guardada y vuelve a la vista publica
+            localStorage.removeItem("token");
+            window.location.href = "index.html";
+        });
+    }
 });
 
 async function cargarCategoriasForm() {
