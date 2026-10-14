@@ -121,7 +121,13 @@ namespace Backend.Controllers
                     cmd.Parameters.AddWithValue("@Imagen", model.Imagen);
                     cmd.Parameters.AddWithValue("@Horario", model.Horario);
 
-                    await cmd.ExecuteNonQueryAsync();
+                    var filasAfectadas = await cmd.ExecuteNonQueryAsync();
+                    if (filasAfectadas == 0)
+                    {
+                        // ExecuteNonQuery devuelve las filas tocadas: 0 = el Id no existe.
+                        // Responder 200 "exitosamente" seria mentirle al cliente.
+                        return NotFound(new { mensaje = "No existe un lugar con ese Id." });
+                    }
                 }
             }
 
@@ -141,7 +147,11 @@ namespace Backend.Controllers
                 using (var cmd = new MySqlCommand(sql, con))
                 {
                     cmd.Parameters.AddWithValue("@IdLugar", id);
-                    await cmd.ExecuteNonQueryAsync();
+                    var filasAfectadas = await cmd.ExecuteNonQueryAsync();
+                    if (filasAfectadas == 0)
+                    {
+                        return NotFound(new { mensaje = "No existe un lugar con ese Id." });
+                    }
                 }
             }
 

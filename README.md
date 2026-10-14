@@ -197,6 +197,16 @@ Base URL: `http://localhost:5080/api`
 
 > 🎛️ **Panel interactivo (Swagger UI):** `http://localhost:5080/swagger` — documentación viva de la API, con botón **Authorize** para probar los endpoints protegidos pegando el token JWT.
 
+### Formato de errores
+
+Cuando algo falla, la API responde con JSON estructurado (nunca stack traces):
+
+```json
+{ "error": "Ocurrió un problema al procesar la solicitud.", "ruta": "/api/lugares", "detalle": "..." }
+```
+
+> El campo `detalle` solo aparece en Development (en producción nunca se exponen internals del servidor). Un `PUT`/`DELETE` a un Id inexistente responde `404` con `{ "mensaje": "No existe un lugar con ese Id." }`.
+
 ### Autenticación
 
 | Método | Ruta | Autenticación | Descripción |
@@ -312,7 +322,7 @@ Puntos identificados durante el análisis (útiles para evolución del proyecto)
 - ✅ **`admin.js` (RESUELTO):** verificación de token única (guard clause), código muerto eliminado y un solo `DOMContentLoaded` concentrando todo el cableado de eventos.
 - ✅ **`Backend.http` (RESUELTO):** ahora contiene solicitudes reales de la API (login, lugares, categorías y creación con token) listas para ejecutar desde VS Code.
 - **Paginación:** `GET /api/lugares` devuelve todos los registros; convendría paginar (`LIMIT/OFFSET`).
-- **Manejo de errores global:** no hay middleware de excepciones ni `ProblemDetails`; sugerencia: `app.UseExceptionHandler()` o filtros.
+- ✅ **Manejo de errores global (RESUELTO):** `ExceptionHandlerGlobal` (`IExceptionHandler`) captura cualquier excepción y responde con JSON limpio; el detalle técnico queda en los logs del servidor y solo se muestra al cliente en Development. Además, `PUT`/`DELETE` a un Id inexistente responden `404` en vez de un 200 falso.
 - **Carga de imágenes:** actualmente se escribe la ruta manualmente (`img/x.jpg`); una mejora natural sería un endpoint de subida de archivos (multipart/form-data).
 
 ---

@@ -1,3 +1,4 @@
+using Backend.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -8,6 +9,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Registrar los controladores en el contenedor de dependencias
 builder.Services.AddControllers();
+
+// ============================================================
+// MANEJO GLOBAL DE ERRORES: cualquier excepción no manejada en
+// los controladores termina en ExceptionHandlerGlobal, que
+// responde con un JSON limpio en lugar de un stack trace.
+// ============================================================
+builder.Services.AddExceptionHandler<ExceptionHandlerGlobal>();
+builder.Services.AddProblemDetails(); // red de seguridad: formato estándar si nadie maneja el error
 
 // ============================================================
 // SWAGGER / OPENAPI: el "menú" de la API.
@@ -79,6 +88,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 var app = builder.Build();
+
+// El "atrapa-todo" va PRIMERO en la cadena: envuelve a todo lo demás.
+app.UseExceptionHandler();
 
 app.UseCors("AllowAll");
 
