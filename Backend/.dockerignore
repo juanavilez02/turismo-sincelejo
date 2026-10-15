@@ -1,0 +1,6 @@
+# Lo que NO debe entrar en la caja de mudancia (basura local)
+bin/
+obj/
+.vscode/
+appsettings.Development.json
+*.user

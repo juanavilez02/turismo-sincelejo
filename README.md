@@ -327,6 +327,24 @@ Puntos identificados durante el análisis (útiles para evolución del proyecto)
 
 ---
 
+## ☁️ Despliegue (Deployment)
+
+Arquitectura desplegada (todo en planes gratuitos, sin tarjeta):
+
+| Pieza | Plataforma | Detalle |
+|---|---|---|
+| 🖼️ Frontend estático | Render Static Site (o GitHub Pages) | Se redespliega con cada push |
+| 👨‍🍳 API .NET 10 | Render Web Service (Docker) | Duerme tras 15 min de inactividad (~1 min en despertar) |
+| 🗄️ MySQL | Aiven (plan gratuito) | Conexión con TLS |
+
+**Puntos clave:**
+
+- El backend se construye con `Backend/Dockerfile` (multi-stage: SDK para compilar, runtime ligero para correr).
+- **Configuración por variables de entorno (12-factor):** `Jwt__Key`, `Jwt__Issuer`, `Jwt__Audience`, `AdminUser__Usuario`, `AdminUser__Password`, `ConnectionStrings__DefaultConnection`. El doble guion bajo (`__`) equivale a los `:` de `appsettings.json` y **sobrescribe** sus valores — mismo código, distinto entorno, cero cambios.
+- Las variables de entorno se configuran en el panel de Render; así la clave JWT de producción **no vive en el repositorio**.
+- **CI/CD incluido:** cada `git push` a `main` redespliega backend y frontend automáticamente.
+- Migración de datos: `mysqldump` de la BD local → `mysql` hacia la BD remota (respaldo + migración en un paso).
+
 ## 👥 Autores
 
 Proyecto académico — *Desarrollo Web* (2026-2).

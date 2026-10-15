@@ -103,13 +103,20 @@ app.UseCors("AllowAll");
 app.UseSwagger();   // genera el documento "menu" (/swagger/v1/swagger.json)
 app.UseSwaggerUI(); // sirve la carta interactiva en /swagger
 
+// Servir las imagenes de ../Frontend/img SOLO SI la carpeta existe.
+// En tu PC existe; en un contenedor Docker/produccion puede no existir,
+// y PhysicalFileProvider lanza excepcion al arrancar si la ruta falta.
+// Con este if, la API enciende segura en cualquier entorno.
 var imageDirectory = Path.GetFullPath(
     Path.Combine(builder.Environment.ContentRootPath, "..", "Frontend", "img"));
-app.UseStaticFiles(new StaticFileOptions
+if (Directory.Exists(imageDirectory))
 {
-    FileProvider = new PhysicalFileProvider(imageDirectory),
-    RequestPath = "/img"
-});
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(imageDirectory),
+        RequestPath = "/img"
+    });
+}
 
 app.UseAuthentication(); // 👈 1. Autentica quién es el usuario
 app.UseAuthorization();  // 👈 2. Autoriza si tiene permiso
