@@ -168,13 +168,16 @@ Al ser archivos estáticos, basta con abrir `Frontend/index.html` en el navegado
 Base de datos: **`lugaressincelejo`** (MySQL). Script de referencia:
 
 ```sql
-CREATE TABLE Categoria (
+-- Nota: los nombres de tablas van en MINUSCULAS. En Linux/MySQL (Aiven, Docker)
+-- las tablas son case-sensitive ('Lugar' != 'lugar'); en Windows/MariaDB local
+-- no se nota, pero en produccion si. Por eso el codigo consulta en minusculas.
+CREATE TABLE categoria (
     IdCategoria INT PRIMARY KEY AUTO_INCREMENT,
     Nombre      VARCHAR(100) NOT NULL,
     Descripcion VARCHAR(255)
 );
 
-CREATE TABLE Lugar (
+CREATE TABLE lugar (
     IdLugar      INT PRIMARY KEY AUTO_INCREMENT,
     IdCategoria  INT NOT NULL,
     Nombre       VARCHAR(150) NOT NULL,
@@ -183,11 +186,11 @@ CREATE TABLE Lugar (
     Imagen       VARCHAR(255),       -- Ej: img/majagual.jpg
     Horario      VARCHAR(100),
     Estado       TINYINT(1) DEFAULT 1,
-    FOREIGN KEY (IdCategoria) REFERENCES Categoria(IdCategoria)
+    FOREIGN KEY (IdCategoria) REFERENCES categoria(IdCategoria)
 );
 ```
 
-**Relación:** `Lugar.IdCategoria` → `Categoria.IdCategoria` (N:1). Las consultas usan `INNER JOIN` para mostrar el nombre de la categoría en cada lugar.
+**Relación:** `lugar.IdCategoria` → `categoria.IdCategoria` (N:1). Las consultas usan `INNER JOIN` para mostrar el nombre de la categoría en cada lugar.
 
 ---
 

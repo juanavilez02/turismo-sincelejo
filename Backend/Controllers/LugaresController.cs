@@ -25,9 +25,11 @@ namespace Backend.Controllers
             using (var con = new MySqlConnection(_connectionString))
             {
                 await con.OpenAsync();
+                // Nombres de tabla en MINUSCULAS: en Linux/MySQL (Aiven, Docker) las tablas
+                // son case-sensitive ('Lugar' != 'lugar'). Windows perdonaba; Linux no.
                 string sql = @"SELECT l.IdLugar, l.Nombre, l.Descripcion, l.Direccion, l.Imagen, l.Horario, l.Estado, c.Nombre AS Categoria, l.IdCategoria 
-                               FROM Lugar l 
-                               INNER JOIN Categoria c ON l.IdCategoria = c.IdCategoria 
+                               FROM lugar l 
+                               INNER JOIN categoria c ON l.IdCategoria = c.IdCategoria 
                                WHERE 1=1";
 
                 if (!string.IsNullOrEmpty(buscar))
@@ -79,7 +81,7 @@ namespace Backend.Controllers
             using (var con = new MySqlConnection(_connectionString))
             {
                 await con.OpenAsync();
-                string sql = @"INSERT INTO Lugar (IdCategoria, Nombre, Descripcion, Direccion, Imagen, Horario, Estado) 
+                string sql = @"INSERT INTO lugar (IdCategoria, Nombre, Descripcion, Direccion, Imagen, Horario, Estado) 
                                VALUES (@IdCategoria, @Nombre, @Descripcion, @Direccion, @Imagen, @Horario, 1)";
 
                 using (var cmd = new MySqlCommand(sql, con))
@@ -106,7 +108,7 @@ namespace Backend.Controllers
             using (var con = new MySqlConnection(_connectionString))
             {
                 await con.OpenAsync();
-                string sql = @"UPDATE Lugar 
+                string sql = @"UPDATE lugar 
                                SET IdCategoria = @IdCategoria, Nombre = @Nombre, Descripcion = @Descripcion, 
                                    Direccion = @Direccion, Imagen = @Imagen, Horario = @Horario 
                                WHERE IdLugar = @IdLugar";
@@ -142,7 +144,7 @@ namespace Backend.Controllers
             using (var con = new MySqlConnection(_connectionString))
             {
                 await con.OpenAsync();
-                string sql = "DELETE FROM Lugar WHERE IdLugar = @IdLugar";
+                string sql = "DELETE FROM lugar WHERE IdLugar = @IdLugar";
 
                 using (var cmd = new MySqlCommand(sql, con))
                 {
@@ -179,7 +181,7 @@ namespace Backend.Controllers
             using (var con = new MySqlConnection(_connectionString))
             {
                 await con.OpenAsync();
-                string sql = "SELECT IdCategoria, Nombre, Descripcion FROM Categoria";
+                string sql = "SELECT IdCategoria, Nombre, Descripcion FROM categoria";
 
                 using (var cmd = new MySqlCommand(sql, con))
                 // Cast al tipo concreto: ver comentario en GetLugaresAsync.
