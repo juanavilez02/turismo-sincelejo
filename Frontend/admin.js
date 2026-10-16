@@ -1,4 +1,8 @@
-const API_URL = "http://localhost:5080/api";
+// Doble vida: si abres la pagina en local (localhost) habla con tu PC;
+// si la abres en produccion (onrender.com), habla con la API de la nube.
+const API_URL = window.location.hostname === "localhost"
+    ? "http://localhost:5080/api"
+    : "https://turismo-sincelejo-api.onrender.com/api";
 
 // 🔒 VERIFICACIÓN DE SEGURIDAD (guard clause): si no hay token guardado,
 // expulsamos al visitante al login ANTES de ejecutar cualquier otra cosa.
