@@ -332,6 +332,16 @@ Puntos identificados durante el análisis (útiles para evolución del proyecto)
 
 ## ☁️ Despliegue (Deployment)
 
+> 🟢 **Este proyecto está LIVE en internet:**
+>
+> | Pieza | URL |
+> |---|---|
+> | 🖼️ Sitio público (frontend) | **https://turismo-sincelejo.onrender.com** |
+> | 👨‍🍳 API REST + Swagger (`/swagger`) | **https://turismo-sincelejo-api.onrender.com** |
+> | 🗄️ MySQL (Aiven, TLS) | `turismo-sincelejo-cun-80d6.i.aivencloud.com:14300` |
+>
+> Acceso admin de demo: usuario `admin` (la contraseña vive en las variables de entorno de Render, no en el repo).
+
 Arquitectura desplegada (todo en planes gratuitos, sin tarjeta):
 
 | Pieza | Plataforma | Detalle |
