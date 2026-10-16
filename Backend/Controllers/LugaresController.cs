@@ -15,28 +15,60 @@ namespace Backend.Controllers
             _connectionString = configuration.GetConnectionString("DefaultConnection")!;
         }
 
-        // 1. OBTENER LUGARES (GET)
+        // 1. OBTENER LUGARES (GET) — paginado
         // async: mientras MySQL responde, este hilo queda libre para atender otras peticiones.
+        // Parámetros: pagina (default 1) y porPagina (default 6, techo de 50).
         [HttpGet]
-        public async Task<IActionResult> GetLugaresAsync([FromQuery] string? buscar, [FromQuery] int? idCategoria)
+        public async Task<IActionResult> GetLugaresAsync([FromQuery] string? buscar, [FromQuery] int? idCategoria,
+                                                         [FromQuery] int pagina = 1, [FromQuery] int porPagina = 6)
         {
+            // Higiene de parámetros: NUNCA confiar en lo que el cliente envía.
+            if (pagina < 1) pagina = 1;
+            if (porPagina < 1) porPagina = 6;
+            if (porPagina > 50) porPagina = 50;
+
             var lista = new List<object>();
+            // 'total' se declara FUERA del using porque lo necesitamos DESPUÉS del bloque:
+            // una variable declarada dentro de un bloque { } muere cuando el bloque termina.
+            int total = 0;
 
             using (var con = new MySqlConnection(_connectionString))
             {
                 await con.OpenAsync();
+
                 // Nombres de tabla en MINUSCULAS: en Linux/MySQL (Aiven, Docker) las tablas
                 // son case-sensitive ('Lugar' != 'lugar'). Windows perdonaba; Linux no.
-                string sql = @"SELECT l.IdLugar, l.Nombre, l.Descripcion, l.Direccion, l.Imagen, l.Horario, l.Estado, c.Nombre AS Categoria, l.IdCategoria 
-                               FROM lugar l 
+                string desde = @" FROM lugar l 
                                INNER JOIN categoria c ON l.IdCategoria = c.IdCategoria 
                                WHERE 1=1";
 
+                string filtros = "";
                 if (!string.IsNullOrEmpty(buscar))
-                    sql += " AND l.Nombre LIKE @buscar";
+                    filtros += " AND l.Nombre LIKE @buscar";
 
                 if (idCategoria.HasValue && idCategoria > 0)
-                    sql += " AND l.IdCategoria = @idCategoria";
+                    filtros += " AND l.IdCategoria = @idCategoria";
+
+                // --- 1) TOTAL de registros que cumplen los filtros (para calcular páginas) ---
+                using (var cmdTotal = new MySqlCommand("SELECT COUNT(*)" + desde + filtros, con))
+                {
+                    if (!string.IsNullOrEmpty(buscar))
+                        cmdTotal.Parameters.AddWithValue("@buscar", $"%{buscar}%");
+
+                    if (idCategoria.HasValue && idCategoria > 0)
+                        cmdTotal.Parameters.AddWithValue("@idCategoria", idCategoria.Value);
+
+                    total = Convert.ToInt32(await cmdTotal.ExecuteScalarAsync());
+                }
+
+                // --- 2) Solo los registros de la página pedida ---
+                // ORDER BY es OBLIGATORIO en paginación: sin orden garantizado,
+                // las páginas podrían repetir o perder filas entre consultas.
+                string sql = @"SELECT l.IdLugar, l.Nombre, l.Descripcion, l.Direccion, l.Imagen, l.Horario, l.Estado, c.Nombre AS Categoria, l.IdCategoria " + desde + filtros + @"
+                               ORDER BY l.IdLugar
+                               LIMIT @limite OFFSET @offset";
+
+                int offset = (pagina - 1) * porPagina;
 
                 using (var cmd = new MySqlCommand(sql, con))
                 {
@@ -45,6 +77,9 @@ namespace Backend.Controllers
 
                     if (idCategoria.HasValue && idCategoria > 0)
                         cmd.Parameters.AddWithValue("@idCategoria", idCategoria.Value);
+
+                    cmd.Parameters.AddWithValue("@limite", porPagina);
+                    cmd.Parameters.AddWithValue("@offset", offset);
 
                     // ExecuteReaderAsync devuelve el tipo genérico (DbDataReader). Hacemos cast al
                     // tipo concreto de MySQL, que es el que implementa los accesores por nombre:
@@ -70,7 +105,15 @@ namespace Backend.Controllers
                 }
             }
 
-            return Ok(lista);
+            // Matemática de paginación: techo de total/porPagina
+            // (las sobras forman su propia última página).
+            int totalPaginas = (int)Math.Ceiling(total / (double)porPagina);
+
+            return Ok(new
+            {
+                lugares = lista,
+                paginacion = new { pagina, porPagina, total, totalPaginas }
+            });
         }
 
         // 2. CREAR LUGAR (POST)

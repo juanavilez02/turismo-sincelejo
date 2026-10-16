@@ -55,9 +55,11 @@ async function cargarCategoriasForm() {
 
 async function cargarTablaLugares() {
     try {
-        const respuesta = await fetch(`${API_URL}/lugares`);
-        const lugares = await respuesta.json();
-        renderTabla(lugares);
+        // La API ahora pagina: pedimos el techo permitido (50 por página)
+        // para que la tabla de administración muestre el catálogo completo.
+        const respuesta = await fetch(`${API_URL}/lugares?porPagina=50`);
+        const datos = await respuesta.json();
+        renderTabla(datos.lugares);
     } catch (error) {
         console.error("Error al cargar la tabla de administración:", error);
     }

@@ -4,6 +4,9 @@ const API_URL = window.location.hostname === "localhost"
     ? "http://localhost:5080/api"
     : "https://turismo-sincelejo-api.onrender.com/api";
 
+// Cuántos lugares trae cada página de la vista pública.
+const LUGARES_POR_PAGINA = 6;
+
 document.addEventListener("DOMContentLoaded", () => {
     cargarCategorias();
     cargarLugares();
@@ -11,11 +14,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // Regla de oro del frontend: TODO el cableado de eventos se registra
     // UNA sola vez, en la fase de arranque. La fase de render (mostrarLugares)
     // solo dibuja; si registrara listeners, se acumularian duplicados.
-    document.getElementById("btnBuscar").addEventListener("click", cargarLugares);
+    // Toda búsqueda nueva empieza desde la página 1.
+    document.getElementById("btnBuscar").addEventListener("click", () => cargarLugares(1));
 
     // Bonus de usabilidad: la tecla Enter en el cuadro de busqueda tambien busca.
     document.getElementById("inputBuscar").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") cargarLugares();
+        if (e.key === "Enter") cargarLugares(1);
     });
 
     // Acceso al panel de administracion. Antes este listener vivia DENTRO de
@@ -46,19 +50,20 @@ async function cargarCategorias() {
     }
 }
 
-async function cargarLugares() {
+async function cargarLugares(pagina = 1) {
     const buscar = document.getElementById("inputBuscar").value;
     const idCategoria = document.getElementById("selectCategoria").value;
 
-    let url = `${API_URL}/lugares?buscar=${encodeURIComponent(buscar)}`;
+    let url = `${API_URL}/lugares?pagina=${pagina}&porPagina=${LUGARES_POR_PAGINA}&buscar=${encodeURIComponent(buscar)}`;
     if (idCategoria > 0) {
         url += `&idCategoria=${idCategoria}`;
     }
 
     try {
         const respuesta = await fetch(url);
-        const lugares = await respuesta.json();
-        mostrarLugares(lugares);
+        const datos = await respuesta.json();
+        mostrarLugares(datos.lugares);
+        mostrarPaginacion(datos.paginacion);
     } catch (error) {
         console.error("Error al consultar la API:", error);
     }
@@ -100,4 +105,30 @@ function mostrarLugares(lugares) {
 
         contenedor.appendChild(card);
     });
+}
+
+// Dibuja los botones de paginación — solo cuando hay más de una página.
+function mostrarPaginacion(p) {
+    const contenedor = document.getElementById("paginacion");
+    contenedor.innerHTML = "";
+
+    if (!p || p.totalPaginas <= 1) return;
+
+    // Fábrica de botones: texto + página destino + estado (deshabilitado/activo)
+    const crearBoton = (texto, destino, deshabilitado = false, activo = false) => {
+        const btn = document.createElement("button");
+        btn.textContent = texto;
+        btn.className = "btn-pagina" + (activo ? " activo" : "");
+        btn.disabled = deshabilitado;
+        btn.addEventListener("click", () => cargarLugares(destino));
+        return btn;
+    };
+
+    contenedor.appendChild(crearBoton("← Anterior", p.pagina - 1, p.pagina === 1));
+
+    for (let i = 1; i <= p.totalPaginas; i++) {
+        contenedor.appendChild(crearBoton(String(i), i, false, i === p.pagina));
+    }
+
+    contenedor.appendChild(crearBoton("Siguiente →", p.pagina + 1, p.pagina === p.totalPaginas));
 }

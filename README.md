@@ -238,9 +238,18 @@ Cuando algo falla, la API responde con JSON estructurado (nunca stack traces):
 
 | Método | Ruta | Autenticación | Descripción |
 |---|---|---|---|
-| `GET` | `/api/lugares` | ❌ Pública | Lista todos los lugares. Filtros opcionales por query string |
-| `GET` | `/api/lugares?buscar=texto` | ❌ Pública | Búsqueda por nombre (`LIKE %texto%`) |
-| `GET` | `/api/lugares?idCategoria=1` | ❌ Pública | Filtra por categoría (si `idCategoria > 0`) |
+| `GET` | `/api/lugares` | ❌ Pública | Lista lugares **paginados**. Query params combinables: `pagina` (default 1), `porPagina` (default 6, techo 50), `buscar`, `idCategoria` |
+| `GET` | `/api/lugares?buscar=texto&pagina=2` | ❌ Pública | Búsqueda por nombre (`LIKE %texto%`) + paginación |
+| `GET` | `/api/lugares?idCategoria=1&porPagina=10` | ❌ Pública | Filtro por categoría con tamaño de página a elección |
+
+**Formato de respuesta del GET (paginado):**
+
+```json
+{
+  "lugares": [ ... ],
+  "paginacion": { "pagina": 1, "porPagina": 6, "total": 7, "totalPaginas": 2 }
+}
+```
 | `POST` | `/api/lugares` | ✅ **Bearer Token** | Crea un lugar (Estado = 1 por defecto) |
 | `PUT` | `/api/lugares/{id}` | ✅ **Bearer Token** | Actualiza un lugar por `IdLugar` |
 | `DELETE` | `/api/lugares/{id}` | ✅ **Bearer Token** | Elimina un lugar por `IdLugar` |
@@ -324,7 +333,7 @@ Puntos identificados durante el análisis (útiles para evolución del proyecto)
 - ✅ **`app.js` (RESUELTO):** el listener del botón `btnPanelAdmin` vive ahora en el `DOMContentLoaded` y se registra una sola vez (antes se acumulaba con cada búsqueda). Bonus añadido: la tecla Enter también dispara la búsqueda.
 - ✅ **`admin.js` (RESUELTO):** verificación de token única (guard clause), código muerto eliminado y un solo `DOMContentLoaded` concentrando todo el cableado de eventos.
 - ✅ **`Backend.http` (RESUELTO):** ahora contiene solicitudes reales de la API (login, lugares, categorías y creación con token) listas para ejecutar desde VS Code.
-- **Paginación:** `GET /api/lugares` devuelve todos los registros; convendría paginar (`LIMIT/OFFSET`).
+- ✅ **Paginación (RESUELTO):** `GET /api/lugares` acepta `pagina` y `porPagina` (techo 50), responde con `{ lugares, paginacion }` usando `LIMIT/OFFSET` con `ORDER BY IdLugar`, y la vista pública muestra controles de navegación.
 - ✅ **Manejo de errores global (RESUELTO):** `ExceptionHandlerGlobal` (`IExceptionHandler`) captura cualquier excepción y responde con JSON limpio; el detalle técnico queda en los logs del servidor y solo se muestra al cliente en Development. Además, `PUT`/`DELETE` a un Id inexistente responden `404` en vez de un 200 falso.
 - **Carga de imágenes:** actualmente se escribe la ruta manualmente (`img/x.jpg`); una mejora natural sería un endpoint de subida de archivos (multipart/form-data).
 
