@@ -25,6 +25,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnCancelarForm").addEventListener("click", cerrarModal);
     document.getElementById("formLugar").addEventListener("submit", guardarLugar);
 
+    // Imagen del lugar: pestañas (subir archivo / URL) + vista previa
+    document.getElementById("tabSubir").addEventListener("click", () => activarTabImagen("subir"));
+    document.getElementById("tabUrl").addEventListener("click", () => activarTabImagen("url"));
+    document.getElementById("formImagenArchivo").addEventListener("change", subirImagenSeleccionada);
+    document.getElementById("formImagen").addEventListener("input", mostrarPreviewImagen);
+
     const btnCerrarSesion = document.getElementById("btnCerrarSesion");
     if (btnCerrarSesion) {
         btnCerrarSesion.addEventListener("click", () => {
@@ -66,6 +72,66 @@ async function cargarTablaLugares() {
     }
 }
 
+// ---- Imagen del lugar: pestañas Subir archivo / URL ----
+function activarTabImagen(modo) {
+    const esSubir = modo === "subir";
+    document.getElementById("tabSubir").classList.toggle("activo", esSubir);
+    document.getElementById("tabUrl").classList.toggle("activo", !esSubir);
+    document.getElementById("formImagenArchivo").style.display = esSubir ? "block" : "none";
+    document.getElementById("formImagen").style.display = esSubir ? "none" : "block";
+}
+
+// Cuando eligen un archivo: se sube YA a la API y la URL que devuelve
+// queda asignada en el campo de imagen (fuente de verdad del formulario).
+async function subirImagenSeleccionada() {
+    const input = document.getElementById("formImagenArchivo");
+    const archivo = input.files[0];
+    if (!archivo) return;
+
+    if (archivo.size > 2 * 1024 * 1024) {
+        alert("La imagen no puede pesar más de 2 MB.");
+        input.value = "";
+        return;
+    }
+
+    // FormData construye el cuerpo multipart solo. OJO: NO se envía
+    // Content-Type a mano — el navegador agrega el 'boundary' necesario.
+    const datos = new FormData();
+    datos.append("archivo", archivo);
+
+    try {
+        const respuesta = await fetch(`${API_URL}/archivos`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: datos
+        });
+
+        if (respuesta.ok) {
+            const resultado = await respuesta.json();
+            document.getElementById("formImagen").value = resultado.url;
+            mostrarPreviewImagen();
+            alert("Imagen subida: la URL quedó asignada al lugar.");
+            input.value = "";
+        } else if (!manejarSesionExpirada(respuesta)) {
+            alert("No se pudo subir la imagen.");
+        }
+    } catch (error) {
+        console.error("Error subiendo imagen:", error);
+    }
+}
+
+// Vista previa con lo que haya en el campo de imagen.
+function mostrarPreviewImagen() {
+    const url = document.getElementById("formImagen").value.trim();
+    const preview = document.getElementById("previewImagen");
+    if (url) {
+        preview.src = url;
+        preview.style.display = "block";
+    } else {
+        preview.style.display = "none";
+    }
+}
+
 function renderTabla(lugares) {
     const tbody = document.getElementById("tablaLugaresBody");
     tbody.innerHTML = "";
@@ -100,6 +166,8 @@ function abrirModalCrear() {
     document.getElementById("modalTitulo").textContent = "Agregar Nuevo Lugar";
     document.getElementById("lugarId").value = "0";
     document.getElementById("formLugar").reset();
+    activarTabImagen("subir");
+    document.getElementById("previewImagen").style.display = "none";
     document.getElementById("modalLugar").style.display = "flex";
 }
 
@@ -113,6 +181,10 @@ function abrirModalEditar(lugar) {
     document.getElementById("formHorario").value = lugar.horario;
     document.getElementById("formImagen").value = lugar.imagen;
 
+    // Al editar mostramos la pestaña de URL (la imagen ya existe) con su preview.
+    activarTabImagen("url");
+    mostrarPreviewImagen();
+
     document.getElementById("modalLugar").style.display = "flex";
 }
 
@@ -122,6 +194,12 @@ function cerrarModal() {
 
 async function guardarLugar(e) {
     e.preventDefault();
+
+    // Validación de imagen en JS (el campo vive en pestañas: archivo o URL)
+    if (!document.getElementById("formImagen").value.trim()) {
+        alert("El lugar necesita una imagen: sube un archivo o pega una URL.");
+        return;
+    }
 
     const id = document.getElementById("lugarId").value;
     const datos = {

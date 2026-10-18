@@ -87,8 +87,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="formImagen">Ruta de Imagen:</label>
-                    <input type="text" id="formImagen" required placeholder="Ej: img/majagual.jpg">
+                    <label>Imagen del lugar:</label>
+                    <div class="imagen-tabs">
+                        <button type="button" id="tabSubir" class="imagen-tab activo">📁 Subir archivo</button>
+                        <button type="button" id="tabUrl" class="imagen-tab">🔗 Usar URL</button>
+                    </div>
+                    <input type="file" id="formImagenArchivo" accept="image/*">
+                    <input type="text" id="formImagen" placeholder="https://ejemplo.com/imagen.jpg" style="display:none;">
+                    <img id="previewImagen" class="preview-imagen" alt="Vista previa de la imagen" style="display:none;">
                 </div>
 
                 <div class="form-actions">

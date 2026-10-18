@@ -118,6 +118,17 @@ if (Directory.Exists(imageDirectory))
     });
 }
 
+// Imagenes subidas desde el panel de admin (wwwroot/uploads), servidas en /uploads/.
+// Directory.CreateDirectory es idempotente: seguro llamarlo siempre (crea la
+// carpeta si falta, tanto en tu PC como dentro del contenedor Docker).
+var uploadsDirectory = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads");
+Directory.CreateDirectory(uploadsDirectory);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsDirectory),
+    RequestPath = "/uploads"
+});
+
 app.UseAuthentication(); // 👈 1. Autentica quién es el usuario
 app.UseAuthorization();  // 👈 2. Autoriza si tiene permiso
 // Mapear automáticamente todos los controladores de la carpeta Controllers
