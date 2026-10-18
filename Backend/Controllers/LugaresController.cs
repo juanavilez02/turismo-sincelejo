@@ -224,7 +224,11 @@ namespace Backend.Controllers
             using (var con = new MySqlConnection(_connectionString))
             {
                 await con.OpenAsync();
-                string sql = "SELECT IdCategoria, Nombre, Descripcion FROM categoria";
+                // Subconsulta correlacionada: por cada categoria, MySQL cuenta sus lugares.
+                // Asi el panel puede avisar ANTES de intentar eliminar una categoria ocupada.
+                string sql = @"SELECT c.IdCategoria, c.Nombre, c.Descripcion,
+                                      (SELECT COUNT(*) FROM lugar l WHERE l.IdCategoria = c.IdCategoria) AS TotalLugares
+                               FROM categoria c";
 
                 using (var cmd = new MySqlCommand(sql, con))
                 // Cast al tipo concreto: ver comentario en GetLugaresAsync.
@@ -236,13 +240,103 @@ namespace Backend.Controllers
                         {
                             idCategoria = reader.GetInt32("IdCategoria"),
                             nombre = reader.GetString("Nombre"),
-                            descripcion = reader.GetString("Descripcion")
+                            // Descripcion puede ser NULL: el patron GetOrdinal evita la excepcion.
+                            descripcion = reader.IsDBNull(reader.GetOrdinal("Descripcion")) ? null : reader.GetString("Descripcion"),
+                            totalLugares = reader.GetInt32("TotalLugares")
                         });
                     }
                 }
             }
 
             return Ok(categorias);
+        }
+
+        // CREAR CATEGORÍA (POST) — requiere token
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> CrearCategoriaAsync([FromBody] CategoriaModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Nombre))
+                return BadRequest(new { mensaje = "El nombre de la categoría es obligatorio." });
+
+            using (var con = new MySqlConnection(_connectionString))
+            {
+                await con.OpenAsync();
+                string sql = "INSERT INTO categoria (Nombre, Descripcion) VALUES (@Nombre, @Descripcion)";
+
+                using (var cmd = new MySqlCommand(sql, con))
+                {
+                    cmd.Parameters.AddWithValue("@Nombre", model.Nombre);
+                    cmd.Parameters.AddWithValue("@Descripcion", (object?)model.Descripcion ?? DBNull.Value);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+
+            return Ok(new { mensaje = "Categoría creada exitosamente" });
+        }
+
+        // EDITAR CATEGORÍA (PUT) — requiere token
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditarCategoriaAsync(int id, [FromBody] CategoriaModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Nombre))
+                return BadRequest(new { mensaje = "El nombre de la categoría es obligatorio." });
+
+            using (var con = new MySqlConnection(_connectionString))
+            {
+                await con.OpenAsync();
+                string sql = @"UPDATE categoria 
+                               SET Nombre = @Nombre, Descripcion = @Descripcion 
+                               WHERE IdCategoria = @IdCategoria";
+
+                using (var cmd = new MySqlCommand(sql, con))
+                {
+                    cmd.Parameters.AddWithValue("@IdCategoria", id);
+                    cmd.Parameters.AddWithValue("@Nombre", model.Nombre);
+                    cmd.Parameters.AddWithValue("@Descripcion", (object?)model.Descripcion ?? DBNull.Value);
+
+                    var filasAfectadas = await cmd.ExecuteNonQueryAsync();
+                    if (filasAfectadas == 0)
+                        return NotFound(new { mensaje = "No existe una categoría con ese Id." });
+                }
+            }
+
+            return Ok(new { mensaje = "Categoría actualizada exitosamente" });
+        }
+
+        // ELIMINAR CATEGORÍA (DELETE) — bloqueada si tiene lugares asociados.
+        // Borrar una categoria con lugares dejaria registros huerfanos: mejor
+        // un 400 claro y humano que el error crudo de FOREIGN KEY de MySQL.
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> EliminarCategoriaAsync(int id)
+        {
+            using (var con = new MySqlConnection(_connectionString))
+            {
+                await con.OpenAsync();
+
+                // Primero contar sus lugares: informar ANTES de intentar borrar.
+                int lugaresAsociados = 0;
+                using (var cmdConteo = new MySqlCommand("SELECT COUNT(*) FROM lugar WHERE IdCategoria = @id", con))
+                {
+                    cmdConteo.Parameters.AddWithValue("@id", id);
+                    lugaresAsociados = Convert.ToInt32(await cmdConteo.ExecuteScalarAsync());
+                }
+
+                if (lugaresAsociados > 0)
+                    return BadRequest(new { mensaje = $"No se puede eliminar: la categoría tiene {lugaresAsociados} lugar(es) asociado(s). Reasigna o elimina esos lugares primero." });
+
+                using (var cmd = new MySqlCommand("DELETE FROM categoria WHERE IdCategoria = @id", con))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    var filasAfectadas = await cmd.ExecuteNonQueryAsync();
+                    if (filasAfectadas == 0)
+                        return NotFound(new { mensaje = "No existe una categoría con ese Id." });
+                }
+            }
+
+            return Ok(new { mensaje = "Categoría eliminada exitosamente" });
         }
     }
 
@@ -254,5 +348,11 @@ namespace Backend.Controllers
         public string Direccion { get; set; } = string.Empty;
         public string Imagen { get; set; } = string.Empty;
         public string Horario { get; set; } = string.Empty;
+    }
+
+    public class CategoriaModel
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public string? Descripcion { get; set; }
     }
 }

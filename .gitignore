@@ -30,6 +30,9 @@ Desktop.ini
 *.tmp
 [Tt]emp/
 
+# --- Imágenes subidas desde el panel (se generan en RUNTIME, no se versionan) ---
+Backend/wwwroot/
+
 # --- Secretos (buena práctica de la industria) ---
 # Hoy appsettings.json usa una contraseña vacía de desarrollo, por eso
 # SÍ se versiona. Pero si algún día pones una contraseña REAL de MySQL,

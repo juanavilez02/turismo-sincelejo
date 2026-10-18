@@ -50,6 +50,30 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Gestión de Categorías -->
+        <section class="admin-categorias">
+            <div class="admin-actions">
+                <h2>Categorías Registradas</h2>
+                <button id="btnNuevaCategoria" class="btn-nuevo-lugar">+ Nueva Categoría</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="tabla-admin">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Lugares</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaCategoriasBody">
+                        <!-- Filas generadas con JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 
     <!-- Modal Formulario (Crear / Editar) -->
@@ -100,6 +124,33 @@
                 <div class="form-actions">
                     <button type="button" id="btnCancelarForm" class="btn-secundario">Cancelar</button>
                     <button type="submit" class="btn-primario">Guardar Lugar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Categoría (Crear / Editar) -->
+    <div id="modalCategoria" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalCategoriaTitulo">
+        <div class="modal-content">
+            <button type="button" id="btnCerrarModalCategoria" class="close" aria-label="Cerrar modal">&times;</button>
+            <h2 id="modalCategoriaTitulo">Nueva Categoría</h2>
+
+            <form id="formCategoria">
+                <input type="hidden" id="categoriaId" value="0">
+
+                <div class="form-group">
+                    <label for="formCatNombre">Nombre:</label>
+                    <input type="text" id="formCatNombre" required placeholder="Ej: Aventura y Naturaleza">
+                </div>
+
+                <div class="form-group">
+                    <label for="formCatDescripcion">Descripción:</label>
+                    <textarea id="formCatDescripcion" rows="2" placeholder="Qué incluye esta categoría..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="btnCancelarCategoria" class="btn-secundario">Cancelar</button>
+                    <button type="submit" class="btn-primario">Guardar Categoría</button>
                 </div>
             </form>
         </div>

@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Carga inicial de datos
     cargarCategoriasForm();
     cargarTablaLugares();
+    cargarTablaCategorias();
 
     // Cableado de eventos: todo en UN solo lugar y registrado UNA sola vez.
     // (Antes habia dos DOMContentLoaded y la verificacion de token duplicada.)
@@ -30,6 +31,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tabUrl").addEventListener("click", () => activarTabImagen("url"));
     document.getElementById("formImagenArchivo").addEventListener("change", subirImagenSeleccionada);
     document.getElementById("formImagen").addEventListener("input", mostrarPreviewImagen);
+
+    // Categorías: tabla + modal propio
+    document.getElementById("btnNuevaCategoria").addEventListener("click", abrirModalCrearCategoria);
+    document.getElementById("btnCerrarModalCategoria").addEventListener("click", cerrarModalCategoria);
+    document.getElementById("btnCancelarCategoria").addEventListener("click", cerrarModalCategoria);
+    document.getElementById("formCategoria").addEventListener("submit", guardarCategoria);
 
     const btnCerrarSesion = document.getElementById("btnCerrarSesion");
     if (btnCerrarSesion) {
@@ -129,6 +136,121 @@ function mostrarPreviewImagen() {
         preview.style.display = "block";
     } else {
         preview.style.display = "none";
+    }
+}
+
+// ==================== CATEGORÍAS ====================
+
+async function cargarTablaCategorias() {
+    try {
+        const respuesta = await fetch(`${API_URL}/categorias`);
+        const categorias = await respuesta.json();
+        renderTablaCategorias(categorias);
+    } catch (error) {
+        console.error("Error al cargar las categorías:", error);
+    }
+}
+
+function renderTablaCategorias(categorias) {
+    const tbody = document.getElementById("tablaCategoriasBody");
+    tbody.innerHTML = "";
+
+    if (!categorias || categorias.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No hay categorías registradas.</td></tr>";
+        return;
+    }
+
+    categorias.forEach(cat => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><strong>${cat.nombre}</strong></td>
+            <td>${cat.descripcion ?? "—"}</td>
+            <td>${cat.totalLugares}</td>
+            <td>
+                <div class="tabla-actions">
+                    <button class="btn-editar" onclick='abrirModalEditarCategoria(${JSON.stringify(cat).replace(/'/g, "&#39;")})'>✏️ Editar</button>
+                    <button class="btn-eliminar" onclick="eliminarCategoria(${cat.idCategoria})">🗑️ Eliminar</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function abrirModalCrearCategoria() {
+    document.getElementById("modalCategoriaTitulo").textContent = "Nueva Categoría";
+    document.getElementById("categoriaId").value = "0";
+    document.getElementById("formCategoria").reset();
+    document.getElementById("modalCategoria").style.display = "flex";
+}
+
+function abrirModalEditarCategoria(cat) {
+    document.getElementById("modalCategoriaTitulo").textContent = "Editar Categoría";
+    document.getElementById("categoriaId").value = cat.idCategoria;
+    document.getElementById("formCatNombre").value = cat.nombre;
+    document.getElementById("formCatDescripcion").value = cat.descripcion ?? "";
+    document.getElementById("modalCategoria").style.display = "flex";
+}
+
+function cerrarModalCategoria() {
+    document.getElementById("modalCategoria").style.display = "none";
+}
+
+async function guardarCategoria(e) {
+    e.preventDefault();
+
+    const id = document.getElementById("categoriaId").value;
+    const datos = {
+        nombre: document.getElementById("formCatNombre").value,
+        descripcion: document.getElementById("formCatDescripcion").value
+    };
+
+    const esEdicion = id > 0;
+    const url = esEdicion ? `${API_URL}/categorias/${id}` : `${API_URL}/categorias`;
+    const metodo = esEdicion ? "PUT" : "POST";
+
+    try {
+        const respuesta = await fetch(url, {
+            method: metodo,
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify(datos)
+        });
+
+        if (respuesta.ok) {
+            alert(esEdicion ? "Categoría actualizada correctamente" : "Categoría creada correctamente");
+            cerrarModalCategoria();
+            cargarTablaCategorias();
+            cargarCategoriasForm(); // el select del formulario de lugares se refresca también
+        } else if (!manejarSesionExpirada(respuesta)) {
+            // Mostramos el mensaje que manda la API (ej: "el nombre es obligatorio")
+            const error = await respuesta.json().catch(() => null);
+            alert(error?.mensaje ?? "Error al procesar la solicitud");
+        }
+    } catch (error) {
+        console.error("Error al guardar la categoría:", error);
+    }
+}
+
+async function eliminarCategoria(id) {
+    if (!confirm("¿Eliminar esta categoría? (Solo es posible si no tiene lugares asociados)")) return;
+
+    try {
+        const respuesta = await fetch(`${API_URL}/categorias/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (respuesta.ok) {
+            alert("Categoría eliminada correctamente");
+            cargarTablaCategorias();
+            cargarCategoriasForm();
+        } else if (!manejarSesionExpirada(respuesta)) {
+            // Aquí brilla el conteo del backend: "tiene N lugares asociados..."
+            const error = await respuesta.json().catch(() => null);
+            alert(error?.mensaje ?? "No se pudo eliminar la categoría");
+        }
+    } catch (error) {
+        console.error("Error al eliminar la categoría:", error);
     }
 }
 

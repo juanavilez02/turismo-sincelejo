@@ -699,3 +699,8 @@ table img {
     border: 1px solid #e2e8f0;
     object-fit: cover;
 }
+
+/* Sección de gestión de categorías en el panel admin */
+.admin-categorias {
+    margin-top: 3rem;
+}
