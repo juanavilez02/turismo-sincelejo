@@ -48,7 +48,9 @@ namespace Backend.Controllers
                 Subject = new ClaimsIdentity(claims),
                 Issuer = _configuration["Jwt:Issuer"],
                 Audience = _configuration["Jwt:Audience"],
-                Expires = DateTime.UtcNow.AddHours(2), // El token dura 2 horas
+                // 8 horas = una jornada de trabajo razonable para un panel de admin.
+            // El frontend detecta la expiración leyendo 'exp' del JWT (auth.js).
+            Expires = DateTime.UtcNow.AddHours(8),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 

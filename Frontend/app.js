@@ -22,12 +22,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") cargarLugares(1);
     });
 
-    // Acceso al panel de administracion. Antes este listener vivia DENTRO de
-    // mostrarLugares(): cada busqueda le sumaba un listener nuevo al mismo boton.
+    // Acceso al panel de administracion. Ya NO borramos el token aqui:
+    // si la sesion es valida, admin.html entra directo; si no lo es,
+    // su propia guardia redirige al login. Cero re-logins innecesarios.
     document.getElementById("btnPanelAdmin").addEventListener("click", (e) => {
         e.preventDefault();
-        localStorage.removeItem("token");
-        window.location.href = "login.html";
+        window.location.href = "admin.html";
     });
 });
 

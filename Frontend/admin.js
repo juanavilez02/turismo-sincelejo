@@ -4,11 +4,12 @@ const API_URL = window.location.hostname === "localhost"
     ? "http://localhost:5080/api"
     : "https://turismo-sincelejo-api.onrender.com/api";
 
-// 🔒 VERIFICACIÓN DE SEGURIDAD (guard clause): si no hay token guardado,
-// expulsamos al visitante al login ANTES de ejecutar cualquier otra cosa.
+// 🔒 VERIFICACIÓN DE SEGURIDAD (guard clause): no basta con que EXISTA un
+// token — también verificamos que no haya EXPIRADO (auth.js trae el helper).
 const token = localStorage.getItem("token");
 
-if (!token) {
+if (!token || tokenExpirado(token)) {
+    localStorage.removeItem("token"); // limpiamos el token vencido o corrupto
     window.location.href = "login.html";
 }
 
@@ -147,7 +148,7 @@ async function guardarLugar(e) {
             alert(esEdicion ? "Lugar actualizado correctamente" : "Lugar guardado correctamente");
             cerrarModal();
             cargarTablaLugares();
-        } else {
+        } else if (!manejarSesionExpirada(respuesta)) {
             alert("Error al procesar la solicitud");
         }
     } catch (error) {
@@ -166,7 +167,7 @@ async function eliminarLugar(id) {
             if (respuesta.ok) {
                 alert("Lugar eliminado correctamente");
                 cargarTablaLugares();
-            } else {
+            } else if (!manejarSesionExpirada(respuesta)) {
                 alert("No se pudo eliminar el lugar");
             }
         } catch (error) {

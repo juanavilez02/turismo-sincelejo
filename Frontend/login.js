@@ -4,6 +4,12 @@ const API_URL = window.location.hostname === "localhost"
     ? "http://localhost:5080/api"
     : "https://turismo-sincelejo-api.onrender.com/api";
 
+// Si ya existe una sesión válida, no repetimos el trámite: directo al panel.
+const tokenGuardado = localStorage.getItem("token");
+if (tokenGuardado && !tokenExpirado(tokenGuardado)) {
+    window.location.href = "admin.html";
+}
+
 document.getElementById("formLogin").addEventListener("submit", async (e) => {
     e.preventDefault();
 
