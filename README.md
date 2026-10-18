@@ -232,7 +232,16 @@ Cuando algo falla, la API responde con JSON estructurado (nunca stack traces):
 
 | Método | Ruta | Autenticación | Descripción |
 |---|---|---|---|
-| `GET` | `/api/categorias` | ❌ Pública | Lista todas las categorías (`idCategoria`, `nombre`, `descripcion`) |
+| `GET` | `/api/categorias` | ❌ Pública | Lista las categorías con conteo de lugares (`idCategoria`, `nombre`, `descripcion`, `totalLugares`) |
+| `POST` | `/api/categorias` | ✅ **Bearer Token** | Crea una categoría (`nombre` obligatorio, `descripcion` opcional) |
+| `PUT` | `/api/categorias/{id}` | ✅ **Bearer Token** | Actualiza una categoría |
+| `DELETE` | `/api/categorias/{id}` | ✅ **Bearer Token** | Elimina una categoría — **bloqueada con 400 si tiene lugares asociados** |
+
+### Archivos
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| `POST` | `/api/archivos` | ✅ **Bearer Token** | Sube una imagen (multipart/form-data, campo `archivo`). Solo jpg/jpeg/png/gif/webp, techo de 2 MB, nombre GUID generado por el servidor. Devuelve `{ url }` absoluta y la imagen queda servida en `/uploads`. |
 
 ### Lugares
 
@@ -302,9 +311,11 @@ curl -X POST http://localhost:5080/api/lugares \
 ### `admin.html` — Panel de Administración (CRUD)
 - **Tabla de lugares:** miniatura de imagen, nombre, categoría, dirección, horario y acciones.
 - **Modal formulario:** crear (`lugarId = 0` → POST) o editar (`lugarId > 0` → PUT).
+- **Imagen con dos modos:** subir archivo (se sube a la API al instante y la URL queda asignada) o pegar URL — con vista previa en vivo.
+- **Gestión de categorías:** tabla propia con conteo de lugares y modal de crear/editar; el borrado se bloquea si hay lugares asociados.
 - **Eliminar:** con ventana de confirmación `confirm()` antes del DELETE.
 - **Cerrar sesión:** borra el token y regresa a la vista pública.
-- **Protegida:** redirige a `login.html` si no hay token.
+- **Protegida:** redirige a `login.html` si no hay token **válido** (existente y no expirado).
 
 ---
 
@@ -326,7 +337,7 @@ Puntos identificados durante el análisis (útiles para evolución del proyecto)
 - ✅ **Clave JWT (RESUELTO):** ya no está en el código; vive en `appsettings.json` (sección `Jwt`) y tanto `Program.cs` como `AuthController.cs` leen de esa única fuente. Para producción: moverla a variables de entorno o user-secrets.
 - **Credenciales de admin en configuración:** el login compara contra la sección `AdminUser` de `appsettings.json`. Sugerencia futura: tabla `Usuario` en MySQL con contraseñas hasheadas (bcrypt/PBKDF2).
 - **CORS `AllowAll`:** acepta cualquier origen. En producción, restringir al dominio del frontend.
-- **Token sin validación de expiración en frontend:** si el token expira a mitad de sesión, la API devuelve `401` pero el panel no lo maneja (solo muestra un `alert` genérico). Sugerencia: capturar el 401 y redirigir al login.
+- ✅ **Token con validación de expiración en frontend (RESUELTO):** `auth.js` decodifica el `exp` del JWT y expulsa sesiones vencidas; los `401` en guardar/eliminar/subir redirigen al login con mensaje claro. Vida del token: 8 horas. El acceso al panel ya no borra el token de usuarios logeados.
 
 ### Funcionales / Calidad de código
 - **`GetBoolean("Estado")`**: requiere que la columna MySQL sea `TINYINT(1)`/`BIT`.
@@ -335,7 +346,7 @@ Puntos identificados durante el análisis (útiles para evolución del proyecto)
 - ✅ **`Backend.http` (RESUELTO):** ahora contiene solicitudes reales de la API (login, lugares, categorías y creación con token) listas para ejecutar desde VS Code.
 - ✅ **Paginación (RESUELTO):** `GET /api/lugares` acepta `pagina` y `porPagina` (techo 50), responde con `{ lugares, paginacion }` usando `LIMIT/OFFSET` con `ORDER BY IdLugar`, y la vista pública muestra controles de navegación.
 - ✅ **Manejo de errores global (RESUELTO):** `ExceptionHandlerGlobal` (`IExceptionHandler`) captura cualquier excepción y responde con JSON limpio; el detalle técnico queda en los logs del servidor y solo se muestra al cliente en Development. Además, `PUT`/`DELETE` a un Id inexistente responden `404` en vez de un 200 falso.
-- **Carga de imágenes:** actualmente se escribe la ruta manualmente (`img/x.jpg`); una mejora natural sería un endpoint de subida de archivos (multipart/form-data).
+- ✅ **Carga de imágenes (RESUELTO):** el formulario ofrece dos modos — subir archivo (`POST /api/archivos` con validaciones) o pegar URL — ambos con vista previa en vivo. Nota de producción: los archivos subidos viven en el contenedor de Render y no sobreviven a redespliegues; la solución definitiva es storage externo (Cloudinary/S3).
 
 ---
 
