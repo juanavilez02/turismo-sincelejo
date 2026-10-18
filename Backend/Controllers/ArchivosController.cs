@@ -53,8 +53,14 @@ namespace Backend.Controllers
             }
 
             // Devolvemos la URL ABSOLUTA: el frontend la guarda tal cual en lugar.Imagen.
-            // Asi funciona igual en local (http://localhost:5080) y en produccion.
-            var url = $"{Request.Scheme}://{Request.Host}/uploads/{nombreNuevo}";
+            // OJO: Render (y casi todo host con proxy) termina el TLS en su borde y
+            // reenvia la peticion por http interno — por eso el esquema real llega
+            // en la cabecera X-Forwarded-Proto. Sin esto las imagenes saldrian con
+            // http:// y el navegador las bloquearia como "mixed content".
+            var esquema = Request.Headers.ContainsKey("X-Forwarded-Proto")
+                ? Request.Headers["X-Forwarded-Proto"].ToString()
+                : Request.Scheme;
+            var url = $"{esquema}://{Request.Host}/uploads/{nombreNuevo}";
             return Ok(new { url });
         }
     }
