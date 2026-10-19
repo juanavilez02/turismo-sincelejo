@@ -25,6 +25,8 @@
             <span>Turismo<strong>Sincelejo</strong></span>
         </a>
 
+        <button id="btnTema" class="btn-tema" aria-label="Cambiar entre modo claro y oscuro" title="Modo claro / oscuro">🌙</button>
+
         <a id="btnPanelAdmin" href="admin.html" class="btn-admin-nav">
             <svg class="btn-admin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"></circle>
@@ -36,6 +38,11 @@
 
     <!-- ============ HERO: imagen envolvente + máscara de gradiente ============ -->
     <header class="hero">
+        <!-- Dos capas de fondo para el crossfade: mientras una se ve,
+             la otra prepara la siguiente foto en la sombra. -->
+        <div class="hero-fondo" id="heroFondoA"></div>
+        <div class="hero-fondo hero-fondo-b" id="heroFondoB"></div>
+
         <div class="hero-contenido">
             <span class="hero-ubicacion">📍 Sincelejo · Sucre · Colombia</span>
             <h1>Descubre la<br><span class="hero-destacado">Sabana</span> y su gente</h1>

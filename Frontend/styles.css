@@ -26,6 +26,9 @@
     --tinta-media: #475569;         /* texto secundario */
     --tinta-suave: #64748B;         /* texto terciario */
     --borde: #E2E8F0;
+    --superficie: #ffffff;                    /* tarjetas, chips, botones */
+    --vidrio: rgba(248, 250, 252, 0.78);      /* navbar glass */
+    --vidrio-hero: rgba(255, 255, 255, 0.96); /* buscador del hero */
 
     /* Sombras (dos niveles: reposo y hover) */
     --sombra: 0 4px 16px rgba(15, 23, 42, 0.08);
@@ -76,7 +79,7 @@ img {
     gap: 1rem;
     padding: 0.8rem 1.5rem;
     /* EL truco glassmorphism: fondo semitransparente + blur del fondo */
-    background: rgba(248, 250, 252, 0.78);
+    background: var(--vidrio);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(226, 232, 240, 0.7);
@@ -187,7 +190,7 @@ img {
     max-width: 560px;
     margin: 0 auto;
     padding: 0.9rem 1.4rem;
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--vidrio-hero);
     border-radius: var(--radio-pill);
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
 }
@@ -234,7 +237,7 @@ img {
     padding: 0.5rem 1.15rem;
     border: 1.5px solid var(--borde);
     border-radius: var(--radio-pill);
-    background: #fff;
+    background: var(--superficie);
     color: var(--tinta-media);
     font: inherit;
     font-size: 0.85rem;
@@ -274,7 +277,7 @@ img {
 }
 
 .card {
-    background: #fff;
+    background: var(--superficie);
     border-radius: var(--radio);
     overflow: hidden;
     box-shadow: var(--sombra);
@@ -362,7 +365,7 @@ img {
     padding: 0.65rem 1rem;
     border-radius: 10px;
     background: var(--acento);          /* el dorado: botón de acción principal */
-    color: var(--tinta);
+    color: #451A03;                     /* ámbar oscuro: buen contraste SIEMPRE, en claro y oscuro */
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 600;
@@ -388,7 +391,7 @@ img {
     padding: 0.5rem 0.95rem;
     border: 1px solid var(--borde);
     border-radius: 10px;
-    background: #fff;
+    background: var(--superficie);
     color: var(--tinta-media);
     font: inherit;
     font-size: 0.9rem;
@@ -528,4 +531,246 @@ img {
     .btn-admin-nav {
         padding: 0.5rem 0.7rem;
     }
+}
+
+/* ================================================================
+   10. HERO VIVO: dos capas para el crossfade de fotos
+   ================================================================ */
+.hero {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Las capas de foto viven DETRÁS del contenido: absolutas y opacas entre sí.
+   El gradiente de legibilidad se dibuja SOBRE las fotos. */
+.hero-fondo {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: opacity 1.4s ease;
+    z-index: 0;
+}
+
+.hero-fondo-b {
+    opacity: 0;              /* la capa B arranca invisible */
+}
+
+/* La máscara oscura que garantiza legibilidad en cualquier foto */
+.hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0.82) 100%);
+    z-index: 1;
+}
+
+.hero-contenido {
+    position: relative;
+    z-index: 2;              /* el texto vive por encima de fotos y máscara */
+}
+
+/* Botón del tema (claro/oscuro) en la navbar */
+.btn-tema {
+    width: 40px;
+    height: 40px;
+    border: 1.5px solid var(--borde);
+    border-radius: 50%;
+    background: var(--superficie);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transicion);
+}
+
+.btn-tema:hover {
+    border-color: var(--acento);
+    transform: rotate(-15deg) scale(1.08);
+}
+
+/* ================================================================
+   11. SKELETONS: el "ya casi está aquí" mientras la API responde
+   ================================================================ */
+.skeleton {
+    border-radius: var(--radio);
+    overflow: hidden;
+    background: var(--superficie);
+    box-shadow: var(--sombra);
+}
+
+/* El brillo que recorre de izquierda a derecha = "estamos trabajando" */
+.skeleton-media,
+.skeleton-linea {
+    background: linear-gradient(90deg, var(--borde) 25%, var(--fondo) 50%, var(--borde) 75%);
+    background-size: 200% 100%;
+    animation: brillo-skeleton 1.4s infinite;
+}
+
+.skeleton-media {
+    height: 210px;
+}
+
+.skeleton-linea {
+    height: 14px;
+    margin: 1.1rem 1.3rem 0;
+    border-radius: 7px;
+}
+
+.skeleton-linea-ancha {
+    width: 70%;
+}
+
+.skeleton-linea-corta {
+    width: 45%;
+}
+
+.skeleton-pie {
+    height: 38px;
+    margin: 1.3rem;
+    border-radius: 10px;
+    background: var(--fondo);
+}
+
+@keyframes brillo-skeleton {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
+}
+
+/* ================================================================
+   12. Animación de entrada escalonada de las tarjetas
+   ================================================================ */
+.card {
+    animation: aparecer-tarjeta 0.55s ease backwards;   /* backwards: aplica el estado
+        inicial durante el delay, y al terminar NO bloquea el hover */
+}
+
+@keyframes aparecer-tarjeta {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   13. Estados con alma: vacío y error
+   ================================================================ */
+.estado {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3.5rem 1.5rem;
+}
+
+.estado-icono {
+    font-size: 3.2rem;
+    display: block;
+    margin-bottom: 0.8rem;
+}
+
+.estado h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--tinta);
+    margin-bottom: 0.4rem;
+}
+
+.estado p {
+    color: var(--tinta-suave);
+    max-width: 440px;
+    margin: 0 auto 1.4rem;
+}
+
+.btn-estado {
+    padding: 0.65rem 1.4rem;
+    border: none;
+    border-radius: var(--radio-pill);
+    background: var(--primario);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transicion);
+}
+
+.btn-estado:hover {
+    background: var(--primario-oscuro);
+    transform: translateY(-1px);
+}
+
+/* ================================================================
+   14. Favoritos: el corazón de cada tarjeta
+   ================================================================ */
+.btn-favorito {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.btn-favorito:hover {
+    transform: scale(1.15);
+}
+
+.btn-favorito.activo {
+    background: #FEE2E2;
+    animation: latido 0.35s ease;
+}
+
+@keyframes latido {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.35); }
+    100% { transform: scale(1); }
+}
+
+.chip-favoritos {
+    border-color: var(--acento) !important;
+}
+
+.chip-favoritos.activo {
+    background: var(--acento);
+    border-color: var(--acento);
+    box-shadow: 0 6px 14px rgba(245, 158, 11, 0.4);
+}
+
+/* ================================================================
+   15. MODO OSCURO: el pago de los design tokens.
+   Cambiamos las VARIABLES y el diseño entero se adapta solo.
+   ================================================================ */
+[data-tema="oscuro"] {
+    --primario: #2DD4BF;      /* turquesa más claro: contraste sobre fondo oscuro */
+    --primario-oscuro: #14B8A6;
+    --primario-suave: rgba(45, 212, 191, 0.16);
+    --fondo: #0B1120;
+    --tinta: #F1F5F9;
+    --tinta-media: #CBD5E1;
+    --tinta-suave: #94A3B8;
+    --borde: #334155;
+    --superficie: #1E293B;
+    --vidrio: rgba(11, 17, 32, 0.82);
+    --vidrio-hero: rgba(30, 41, 59, 0.96);
+    --sombra: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --sombra-elevada: 0 20px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* Ajustes puntuales del modo oscuro */
+[data-tema="oscuro"] .hero-buscador {
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+[data-tema="oscuro"] .btn-favorito {
+    background: rgba(30, 41, 59, 0.92);
+}
+
+[data-tema="oscuro"] .btn-favorito.activo {
+    background: rgba(220, 38, 38, 0.25);
+}
+
+[data-tema="oscuro"] .chip.activo {
+    box-shadow: 0 6px 14px rgba(45, 212, 191, 0.3);
 }
