@@ -45,6 +45,10 @@ document.addEventListener("DOMContentLoaded", () => {
         sidebar.classList.remove("abierta");
         abrirModalCrear();
     });
+    document.getElementById("btnNuevaCategoriaNav").addEventListener("click", () => {
+        sidebar.classList.remove("abierta");
+        abrirModalCrearCategoria();
+    });
     document.querySelectorAll(".nav-item[data-seccion]").forEach(item => {
         item.addEventListener("click", () => {
             document.querySelector(item.dataset.seccion).scrollIntoView({ behavior: "smooth" });
