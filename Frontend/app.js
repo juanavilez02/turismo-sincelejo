@@ -405,20 +405,48 @@ async function actualizarPinesMapa(lugares) {
     }
 }
 
+// Emojis por categoría (las categorías son dinámicas: las desconocidas
+// caen al pin clásico 📍 — el sistema nunca se rompe con categorías nuevas)
+const EMOJIS_CATEGORIAS = {
+    "Cultura e Historia": "🏛️",
+    "Parques y Recreación": "🌳",
+    "Gastronomía Tradicional": "🍽️",
+    "Comercio y Entretenimiento": "🛍️"
+};
+
 function crearPin(lugar, coords) {
     const urlMapa = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lugar.nombre + ' Sincelejo ' + lugar.direccion)}`;
     const imagen = lugar.imagen
         ? `<img src="${lugar.imagen}" alt="${lugar.nombre}" onerror="this.style.display='none'">`
         : "";
+    const emoji = EMOJIS_CATEGORIAS[lugar.categoria] ?? "📍";
 
-    return L.marker(coords).bindPopup(`
-        <div class="popup-mapa">
-            ${imagen}
-            <strong>${lugar.nombre}</strong>
-            <span class="popup-categoria">${lugar.categoria}</span><br>
-            <a href="${urlMapa}" target="_blank" rel="noopener noreferrer">Cómo llegar →</a>
-        </div>
-    `);
+    // Pin personalizado (divIcon = HTML propio dentro del mapa): círculo dorado
+    // con el emoji de la categoría. Y el nombre en un tooltip PERMANENTE:
+    // siempre visible al lado del pin, sin necesidad de hacer clic.
+    const icono = L.divIcon({
+        className: "pin-personalizado",
+        html: `<div class="pin-cuerpo">${emoji}</div>`,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19],
+        popupAnchor: [0, -24]
+    });
+
+    return L.marker(coords, { icon: icono })
+        .bindTooltip(lugar.nombre, {
+            permanent: true,
+            direction: "top",
+            offset: [0, -18],
+            className: "tooltip-pin"
+        })
+        .bindPopup(`
+            <div class="popup-mapa">
+                ${imagen}
+                <strong>${lugar.nombre}</strong>
+                <span class="popup-categoria">${lugar.categoria}</span><br>
+                <a href="${urlMapa}" target="_blank" rel="noopener noreferrer">Cómo llegar →</a>
+            </div>
+        `);
 }
 
 // ---------- Geocodificación: nombre → coordenadas ----------

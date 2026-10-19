@@ -876,3 +876,50 @@ img {
         height: 340px;
     }
 }
+
+/* ---------- Pines personalizados y sus etiquetas ---------- */
+.pin-personalizado {
+    background: transparent;
+    border: none;
+}
+
+.pin-cuerpo {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--superficie);
+    border: 3px solid var(--acento);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.35);
+    font-size: 17px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.pin-personalizado:hover .pin-cuerpo {
+    transform: scale(1.18);
+}
+
+/* La etiqueta del nombre (tooltip permanente de Leaflet, con nuestra marca) */
+.leaflet-tooltip.tooltip-pin {
+    background: var(--tinta);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.4);
+    white-space: nowrap;
+}
+
+[data-tema="oscuro"] .leaflet-tooltip.tooltip-pin {
+    background: #F1F5F9;
+    color: #0F172A;
+}
+
+.leaflet-tooltip.tooltip-pin::before {
+    display: none;   /* fuera la flechita: etiqueta flotante limpia */
+}
