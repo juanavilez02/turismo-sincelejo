@@ -7,19 +7,18 @@ const API_URL = window.location.hostname === "localhost"
 // Cuántos lugares trae cada página de la vista pública.
 const LUGARES_POR_PAGINA = 6;
 
+// Categoría seleccionada en los chips (0 = "Todas"). Vive en una variable
+// porque ya no hay <select>: los chips son botones y esta es su memoria.
+let categoriaSeleccionada = 0;
+
 document.addEventListener("DOMContentLoaded", () => {
     cargarCategorias();
     cargarLugares();
 
-    // Regla de oro del frontend: TODO el cableado de eventos se registra
-    // UNA sola vez, en la fase de arranque. La fase de render (mostrarLugares)
-    // solo dibuja; si registrara listeners, se acumularian duplicados.
-
     // ============================================================
     // BÚSQUEDA EN VIVO con DEBOUNCE: consultamos cuando el dedo
     // descansa ~400ms, no en cada tecla (evita ametrallar la API
-    // y las condiciones de carrera). El botón Buscar murió: la
-    // interfaz responde mientras piensas.
+    // y las condiciones de carrera).
     // ============================================================
     let temporizadorBusqueda = null;
     document.getElementById("inputBuscar").addEventListener("input", () => {
@@ -27,33 +26,43 @@ document.addEventListener("DOMContentLoaded", () => {
         temporizadorBusqueda = setTimeout(() => cargarLugares(1), 400);
     });
 
-    // Cambiar de categoría también refresca al instante: es una
-    // acción deliberada (no tecleo), no necesita debounce.
-    document.getElementById("selectCategoria").addEventListener("change", () => cargarLugares(1));
-
-    // Acceso al panel de administracion. Ya NO borramos el token aqui:
-    // si la sesion es valida, admin.html entra directo; si no lo es,
-    // su propia guardia redirige al login. Cero re-logins innecesarios.
+    // Acceso al panel de administración: navegación directa; la guardia
+    // de admin.html decide si la sesión es válida o redirige al login.
     document.getElementById("btnPanelAdmin").addEventListener("click", (e) => {
         e.preventDefault();
         window.location.href = "admin.html";
     });
 });
 
+// ============================================================
+// CHIPS DE CATEGORÍAS: píldoras interactivas que reemplazan al
+// viejo <select>. Nacen de la misma API; el clic marca la píldora
+// activa y refresca el grid al instante.
+// ============================================================
 async function cargarCategorias() {
     try {
         const respuesta = await fetch(`${API_URL}/categorias`);
         const categorias = await respuesta.json();
-        const select = document.getElementById("selectCategoria");
+        const contenedor = document.getElementById("chipsCategorias");
+        contenedor.innerHTML = "";
 
-        select.innerHTML = '<option value="0">Todas las categorías</option>';
+        const crearChip = (id, nombre, activo) => {
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "chip" + (activo ? " activo" : "");
+            chip.textContent = nombre;
+            chip.addEventListener("click", () => {
+                categoriaSeleccionada = id;
+                // Visual: solo el chip clickeado queda marcado
+                contenedor.querySelectorAll(".chip").forEach(c => c.classList.remove("activo"));
+                chip.classList.add("activo");
+                cargarLugares(1);
+            });
+            return chip;
+        };
 
-        categorias.forEach(cat => {
-            const option = document.createElement("option");
-            option.value = cat.idCategoria;
-            option.textContent = cat.nombre;
-            select.appendChild(option);
-        });
+        contenedor.appendChild(crearChip(0, "Todas", true));
+        categorias.forEach(cat => contenedor.appendChild(crearChip(cat.idCategoria, cat.nombre, false)));
     } catch (error) {
         console.error("Error al cargar categorías:", error);
     }
@@ -65,16 +74,14 @@ let controladorBusqueda = null;
 
 async function cargarLugares(pagina = 1) {
     const buscar = document.getElementById("inputBuscar").value;
-    const idCategoria = document.getElementById("selectCategoria").value;
 
     let url = `${API_URL}/lugares?pagina=${pagina}&porPagina=${LUGARES_POR_PAGINA}&buscar=${encodeURIComponent(buscar)}`;
-    if (idCategoria > 0) {
-        url += `&idCategoria=${idCategoria}`;
+    if (categoriaSeleccionada > 0) {
+        url += `&idCategoria=${categoriaSeleccionada}`;
     }
 
     // ¿Hay una consulta anterior todavía volando? La colgamos: solo
-    // la intención más reciente merece pintarse (evita que una respuesta
-    // lenta y vieja pise los resultados frescos).
+    // la intención más reciente merece pintarse.
     controladorBusqueda?.abort();
     controladorBusqueda = new AbortController();
 
@@ -92,12 +99,16 @@ async function cargarLugares(pagina = 1) {
     }
 }
 
+// ============================================================
+// TARJETAS: la vitrina. Badge de categoría sobre la foto, datos
+// reales abajo y "cómo llegar" en dorado Sabanero.
+// ============================================================
 function mostrarLugares(lugares) {
     const contenedor = document.getElementById("gridLugares");
     contenedor.innerHTML = "";
 
     if (lugares.length === 0) {
-        contenedor.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #64748b;'>No se encontraron lugares con los criterios seleccionados.</p>";
+        contenedor.innerHTML = "<p class='sin-resultados'>No se encontraron lugares con los criterios seleccionados. Prueba con otra palabra 🌾</p>";
         return;
     }
 
@@ -108,21 +119,21 @@ function mostrarLugares(lugares) {
         const urlMapa = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lugar.nombre + ' Sincelejo ' + lugar.direccion)}`;
 
         card.innerHTML = `
-            <div class="card-img-container">
-                <img src="${lugar.imagen}" alt="${lugar.nombre}" onerror="this.onerror=null; this.src='https://picsum.photos/800/500?random=${lugar.idLugar}';">
+            <div class="card-media">
+                <img src="${lugar.imagen}" alt="${lugar.nombre}" loading="lazy"
+                     onerror="this.onerror=null; this.src='https://picsum.photos/800/500?random=${lugar.idLugar}';">
+                <span class="card-badge">${lugar.categoria}</span>
             </div>
             <div class="card-body">
-                <span class="card-badge">${lugar.categoria}</span>
                 <h2 class="card-title">${lugar.nombre}</h2>
                 <p class="card-text">${lugar.descripcion}</p>
-                <div class="card-info">
-                    <p>📍 <strong>Dirección:</strong> ${lugar.direccion}</p>
-                    <p>⏰ <strong>Horario:</strong> ${lugar.horario}</p>
-                    
-                    <a href="${urlMapa}" target="_blank" rel="noopener noreferrer" class="btn-mapa">
-                        🗺️ Cómo llegar
-                    </a>
+                <div class="card-meta">
+                    <p>📍 ${lugar.direccion}</p>
+                    <p>⏰ ${lugar.horario}</p>
                 </div>
+                <a href="${urlMapa}" target="_blank" rel="noopener noreferrer" class="btn-mapa">
+                    🗺️ Cómo llegar
+                </a>
             </div>
         `;
 
