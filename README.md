@@ -377,6 +377,7 @@ Arquitectura desplegada (todo en planes gratuitos, sin tarjeta):
 - Las variables de entorno se configuran en el panel de Render; así la clave JWT de producción **no vive en el repositorio**.
 - **CI/CD incluido:** cada `git push` a `main` redespliega backend y frontend automáticamente.
 - Migración de datos: `mysqldump` de la BD local → `mysql` hacia la BD remota (respaldo + migración en un paso).
+- ⚠️ **Nota operativa:** el plan gratuito de Aiven **apaga el servicio tras inactividad** (y su DNS desaparece mientras está apagado). Síntoma: los endpoints que tocan la BD responden `500` mientras el resto funciona. Solución: encender el servicio desde el panel de Aiven. Diagnóstico profesional: los `fail:` del log de Render muestran el `MySqlException`. Regla de oro: los respaldos (`mysqldump`) existen por esto.
 
 ## 👥 Autores
 
