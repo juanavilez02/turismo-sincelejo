@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnNuevaCategoria").addEventListener("click", abrirModalCrearCategoria);
     document.getElementById("btnCerrarModalCategoria").addEventListener("click", cerrarModalCategoria);
     document.getElementById("btnCancelarCategoria").addEventListener("click", cerrarModalCategoria);
-    document.getElementById("formCategoria").addEventListener("submit", guardarCategoria);
+    document.getElementById("formCategoriaModal").addEventListener("submit", guardarCategoria);
 
     const btnCerrarSesion = document.getElementById("btnCerrarSesion");
     if (btnCerrarSesion) {
@@ -180,7 +180,7 @@ function renderTablaCategorias(categorias) {
 function abrirModalCrearCategoria() {
     document.getElementById("modalCategoriaTitulo").textContent = "Nueva Categoría";
     document.getElementById("categoriaId").value = "0";
-    document.getElementById("formCategoria").reset();
+    document.getElementById("formCategoriaModal").reset();
     document.getElementById("modalCategoria").style.display = "flex";
 }
 
