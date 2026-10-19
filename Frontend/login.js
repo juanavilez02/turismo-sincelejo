@@ -10,6 +10,15 @@ if (tokenGuardado && !tokenExpirado(tokenGuardado)) {
     window.location.href = "admin.html";
 }
 
+// El "ojito" 👁️: alterna la contraseña entre visible y oculta.
+// type="password" → puntos; type="text" → letras. El botón cambia de ícono.
+document.getElementById("btnVerPassword").addEventListener("click", () => {
+    const inputPassword = document.getElementById("password");
+    const visible = inputPassword.type === "text";
+    inputPassword.type = visible ? "password" : "text";
+    document.getElementById("btnVerPassword").textContent = visible ? "👁️" : "🙈";
+});
+
 document.getElementById("formLogin").addEventListener("submit", async (e) => {
     e.preventDefault();
 

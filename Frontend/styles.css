@@ -704,3 +704,32 @@ table img {
 .admin-categorias {
     margin-top: 3rem;
 }
+
+/* El "ojito" del campo de contraseña */
+.campo-password {
+    position: relative;
+}
+
+.campo-password input {
+    padding-right: 2.9rem; /* espacio para el botón del ojito */
+}
+
+.btn-ojo {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.15rem;
+    padding: 4px 6px;
+    border-radius: 6px;
+    opacity: 0.65;
+    transition: opacity 0.2s ease;
+    line-height: 1;
+}
+
+.btn-ojo:hover {
+    opacity: 1;
+}
