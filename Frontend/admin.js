@@ -38,6 +38,28 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnCancelarCategoria").addEventListener("click", cerrarModalCategoria);
     document.getElementById("formCategoriaModal").addEventListener("submit", guardarCategoria);
 
+    // Sidebar (rediseño Fase 2): menú móvil, navegación suave y acción rápida
+    const sidebar = document.getElementById("sidebar");
+    document.getElementById("btnMenuMovil").addEventListener("click", () => sidebar.classList.toggle("abierta"));
+    document.getElementById("btnNuevoLugarNav").addEventListener("click", () => {
+        sidebar.classList.remove("abierta");
+        abrirModalCrear();
+    });
+    document.querySelectorAll(".nav-item[data-seccion]").forEach(item => {
+        item.addEventListener("click", () => {
+            document.querySelector(item.dataset.seccion).scrollIntoView({ behavior: "smooth" });
+            sidebar.classList.remove("abierta");   // en móvil: navegar cierra el cajón
+        });
+    });
+
+    // Reloj del topbar: se actualiza solo cada 30 segundos
+    const actualizarReloj = () => {
+        document.getElementById("reloj").textContent =
+            new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+    };
+    actualizarReloj();
+    setInterval(actualizarReloj, 30000);
+
     const btnCerrarSesion = document.getElementById("btnCerrarSesion");
     if (btnCerrarSesion) {
         btnCerrarSesion.addEventListener("click", () => {
@@ -74,9 +96,19 @@ async function cargarTablaLugares() {
         const respuesta = await fetch(`${API_URL}/lugares?porPagina=50`);
         const datos = await respuesta.json();
         renderTabla(datos.lugares);
+
+        // KPIs en vivo: los números del panel salen de los mismos datos
+        actualizarKpi("kpiLugares", datos.paginacion.total);
+        actualizarKpi("kpiPublicados", datos.lugares.filter(l => l.estado).length);
     } catch (error) {
         console.error("Error al cargar la tabla de administración:", error);
     }
+}
+
+// Escribe un valor en una tarjeta KPI (si el elemento existe).
+function actualizarKpi(id, valor) {
+    const kpi = document.getElementById(id);
+    if (kpi) kpi.textContent = valor;
 }
 
 // ---- Imagen del lugar: pestañas Subir archivo / URL ----
@@ -146,6 +178,7 @@ async function cargarTablaCategorias() {
         const respuesta = await fetch(`${API_URL}/categorias`);
         const categorias = await respuesta.json();
         renderTablaCategorias(categorias);
+        actualizarKpi("kpiCategorias", categorias.length);
     } catch (error) {
         console.error("Error al cargar las categorías:", error);
     }

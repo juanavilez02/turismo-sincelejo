@@ -9,82 +9,135 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="admin.css">
 </head>
-<body>
+<body class="admin-body">
 
-    <header style="background-color: #1e293b; color: white; padding: 2rem 1rem; text-align: center; position: relative;">
-    
-    <h1 style="margin: 0; font-size: 2rem;">Panel de Gestión de Lugares</h1>
-    <p style="margin-top: 0.5rem; color: #94a3b8;">Módulo de Administración (CRUD) - Mantenimiento de sitios turísticos</p>
-
-    <!-- Contenedor para alinear los botones horizontalmente -->
-    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
-        <a href="index.html" class="btn-secundario" style="text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; background: #334155; color: white; display: inline-flex; align-items: center; gap: 0.5rem;">
-            ⬅️ Volver a la Vista Pública
+    <!-- ============ SIDEBAR FIJA ============ -->
+    <aside class="sidebar" id="sidebar">
+        <a href="admin.html" class="sidebar-brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <span>Turismo<strong>Sincelejo</strong></span>
         </a>
-        
-        <button id="btnCerrarSesion" style="padding: 0.5rem 1rem; border-radius: 6px; background: #ef4444; color: white; border: none; cursor: pointer; font-weight: bold; transition: background 0.2s;">
-            🚪 Cerrar Sesión
-        </button>
+
+        <nav class="sidebar-nav">
+            <span class="nav-grupo">Gestión</span>
+            <button class="nav-item" data-seccion="#seccion-lugares">📍 Lugares</button>
+            <button class="nav-item" data-seccion="#seccion-categorias">🏷️ Categorías</button>
+
+            <span class="nav-grupo">Acciones rápidas</span>
+            <button class="nav-item nav-destacado" id="btnNuevoLugarNav">➕ Agregar lugar</button>
+        </nav>
+
+        <div class="sidebar-pie">
+            <a href="index.html" class="nav-item">🌐 Ver sitio público</a>
+            <button id="btnCerrarSesion" class="nav-item nav-salir">🚪 Cerrar sesión</button>
+        </div>
+    </aside>
+
+    <!-- ============ CONTENIDO PRINCIPAL ============ -->
+    <div class="admin-principal">
+
+        <!-- Topbar con reloj y perfil -->
+        <header class="admin-topbar">
+            <button id="btnMenuMovil" class="btn-menu" aria-label="Abrir menú">☰</button>
+            <h1>Panel de Gestión</h1>
+            <div class="topbar-perfil">
+                <span id="reloj" class="reloj"></span>
+                <span class="avatar" title="Administrador">A</span>
+            </div>
+        </header>
+
+        <main class="admin-contenido">
+
+            <!-- ===== KPIs: resumen con datos REALES de la base ===== -->
+            <section class="kpis" aria-label="Resumen del panel">
+                <article class="kpi">
+                    <div class="kpi-icono kpi-turquesa">📍</div>
+                    <div class="kpi-dato">
+                        <span id="kpiLugares" class="kpi-numero">—</span>
+                        <p class="kpi-label">Lugares registrados</p>
+                    </div>
+                </article>
+
+                <article class="kpi">
+                    <div class="kpi-icono kpi-dorado">🏷️</div>
+                    <div class="kpi-dato">
+                        <span id="kpiCategorias" class="kpi-numero">—</span>
+                        <p class="kpi-label">Categorías activas</p>
+                    </div>
+                </article>
+
+                <article class="kpi">
+                    <div class="kpi-icono kpi-verde">✅</div>
+                    <div class="kpi-dato">
+                        <span id="kpiPublicados" class="kpi-numero">—</span>
+                        <p class="kpi-label">Lugares publicados</p>
+                    </div>
+                </article>
+            </section>
+
+            <!-- ===== GESTIÓN DE LUGARES ===== -->
+            <section id="seccion-lugares" class="admin-seccion">
+                <div class="admin-actions">
+                    <h2>Lugares registrados</h2>
+                    <button id="btnNuevoLugar" class="btn-nuevo-lugar">+ Agregar Nuevo Lugar</button>
+                </div>
+
+                <!-- Tabla de Gestión CRUD -->
+                <div class="table-responsive">
+                    <table class="tabla-admin">
+                        <thead>
+                            <tr>
+                                <th>Imagen</th>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Dirección</th>
+                                <th>Horario</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaLugaresBody">
+                            <!-- Los registros se cargan dinámicamente con JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ===== GESTIÓN DE CATEGORÍAS ===== -->
+            <section id="seccion-categorias" class="admin-seccion admin-categorias">
+                <div class="admin-actions">
+                    <h2>Categorías registradas</h2>
+                    <button id="btnNuevaCategoria" class="btn-nuevo-lugar">+ Nueva Categoría</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="tabla-admin">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Descripción</th>
+                                <th>Lugares</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCategoriasBody">
+                            <!-- Filas generadas con JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
     </div>
-
-</header>
-
-    <main class="container">
-        <div class="admin-actions">
-            <h2>Lugares Registrados</h2>
-            <button id="btnNuevoLugar" class="btn-nuevo-lugar">+ Agregar Nuevo Lugar</button>
-        </div>
-
-        <!-- Tabla de Gestión CRUD -->
-        <div class="table-responsive">
-            <table class="tabla-admin">
-                <thead>
-                    <tr>
-                        <th>Imagen</th>
-                        <th>Nombre</th>
-                        <th>Categoría</th>
-                        <th>Dirección</th>
-                        <th>Horario</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaLugaresBody">
-                    <!-- Los registros se cargan dinámicamente con JS -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Gestión de Categorías -->
-        <section class="admin-categorias">
-            <div class="admin-actions">
-                <h2>Categorías Registradas</h2>
-                <button id="btnNuevaCategoria" class="btn-nuevo-lugar">+ Nueva Categoría</button>
-            </div>
-
-            <div class="table-responsive">
-                <table class="tabla-admin">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th>Lugares</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaCategoriasBody">
-                        <!-- Filas generadas con JS -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </main>
 
     <!-- Modal Formulario (Crear / Editar) -->
     <div id="modalLugar" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
         <div class="modal-content">
             <button type="button" id="btnCerrarModal" class="close" aria-label="Cerrar modal">&times;</button>
             <h2 id="modalTitulo">Agregar Nuevo Lugar</h2>
-            
+
             <form id="formLugar">
                 <input type="hidden" id="lugarId" value="0">
 

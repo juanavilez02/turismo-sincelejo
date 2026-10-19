@@ -551,3 +551,272 @@ table img {
         flex-direction: column-reverse;
     }
 }
+
+/* ================================================================
+   8. LAYOUT DEL PANEL: sidebar fija + topbar + contenido
+   ================================================================ */
+.admin-body {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    padding: 1.6rem 1.1rem;
+    background: var(--tinta);
+    color: #CBD5E1;
+    z-index: 200;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    text-decoration: none;
+    color: #fff;
+    font-size: 1.02rem;
+    padding: 0 0.4rem;
+}
+
+.sidebar-brand svg {
+    color: var(--acento);
+    flex-shrink: 0;
+}
+
+.sidebar-brand strong {
+    color: var(--acento);
+    font-weight: 800;
+}
+
+.sidebar-nav,
+.sidebar-pie {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.sidebar-nav {
+    flex: 1;
+}
+
+.nav-grupo {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748B;
+    margin: 0.9rem 0.4rem 0.3rem;
+}
+
+.nav-grupo:first-child {
+    margin-top: 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.62rem 0.75rem;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #CBD5E1;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: var(--transicion);
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.nav-destacado {
+    background: rgba(245, 158, 11, 0.14);
+    color: var(--acento);
+}
+
+.nav-destacado:hover {
+    background: var(--acento);
+    color: var(--tinta);
+}
+
+.nav-salir:hover {
+    background: rgba(220, 38, 38, 0.15);
+    color: #FCA5A5;
+}
+
+/* ---------- Contenido principal (al lado de la sidebar) ---------- */
+.admin-principal {
+    flex: 1;
+    margin-left: 250px;      /* el ancho exacto de la sidebar */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ---------- Topbar glass ---------- */
+.admin-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.8rem;
+    background: rgba(241, 245, 249, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--borde);
+}
+
+.admin-topbar h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.btn-menu {
+    display: none;           /* solo despierta en móvil */
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.topbar-perfil {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.reloj {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--tinta-suave);
+    font-variant-numeric: tabular-nums;   /* dígitos del mismo ancho: no baila */
+}
+
+.avatar {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--primario);
+    color: #fff;
+    font-weight: 700;
+}
+
+/* ---------- Contenido y KPIs ---------- */
+.admin-contenido {
+    width: 100%;
+    max-width: 1200px;
+    padding: 2rem 1.8rem 3rem;
+}
+
+.kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);   /* móvil también aguanta 3... */
+    gap: 1.1rem;
+    margin-bottom: 2.2rem;
+}
+
+.kpi {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.2rem 1.3rem;
+    box-shadow: var(--sombra);
+    transition: var(--transicion);
+}
+
+.kpi:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--sombra-elevada, var(--sombra));
+}
+
+.kpi-icono {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.kpi-turquesa { background: var(--primario-suave); }
+.kpi-dorado   { background: #FEF3C7; }
+.kpi-verde    { background: #DCFCE7; }
+
+.kpi-numero {
+    display: block;
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--tinta);
+}
+
+.kpi-label {
+    font-size: 0.8rem;
+    color: var(--tinta-suave);
+    font-weight: 500;
+}
+
+/* ---------- Secciones ---------- */
+.admin-seccion h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--tinta);
+}
+
+/* ================================================================
+   9. Responsive del panel: la sidebar se vuelve cajón en móvil
+   ================================================================ */
+@media (max-width: 900px) {
+    .sidebar {
+        transform: translateX(-100%);   /* escondida fuera de pantalla */
+        box-shadow: 20px 0 50px rgba(15, 23, 42, 0.3);
+    }
+
+    .sidebar.abierta {
+        transform: translateX(0);      /* el menú hamburguesa la revela */
+    }
+
+    .admin-principal {
+        margin-left: 0;
+    }
+
+    .btn-menu {
+        display: grid;
+        place-items: center;
+    }
+
+    .admin-contenido {
+        padding: 1.5rem 1rem 2.5rem;
+    }
+
+    .kpis {
+        grid-template-columns: 1fr;     /* móvil: KPIs apilados */
+    }
+}
