@@ -299,7 +299,7 @@ curl -X POST http://localhost:5080/api/lugares \
 ## 🖼 Vistas del Frontend
 
 ### `index.html` — Vista Pública (Turista)
-- **Filtros:** cuadro de búsqueda por nombre + selector de categorías (cargado dinámicamente desde `/api/categorias`).
+- **Filtros:** **búsqueda en vivo** con debounce de 400 ms (sin botón — responde mientras escribes) + selector de categorías que refresca al instante (cargado dinámicamente desde `/api/categorias`).
 - **Grid de tarjetas:** cada tarjeta muestra imagen (con *fallback* a `picsum.photos` si la imagen falla), badge de categoría, descripción, dirección y horario.
 - **Botón "🗺️ Cómo llegar":** abre Google Maps con la ubicación del lugar en una pestaña nueva.
 - **Acceso al panel:** botón "⚙️ Panel de Administración" en el encabezado.
@@ -341,7 +341,7 @@ Puntos identificados durante el análisis (útiles para evolución del proyecto)
 
 ### Funcionales / Calidad de código
 - **`GetBoolean("Estado")`**: requiere que la columna MySQL sea `TINYINT(1)`/`BIT`.
-- ✅ **`app.js` (RESUELTO):** el listener del botón `btnPanelAdmin` vive ahora en el `DOMContentLoaded` y se registra una sola vez (antes se acumulaba con cada búsqueda). Bonus añadido: la tecla Enter también dispara la búsqueda.
+- ✅ **`app.js` (RESUELTO):** el listener del botón `btnPanelAdmin` vive ahora en el `DOMContentLoaded` y se registra una sola vez (antes se acumulaba con cada búsqueda). La búsqueda funciona **en vivo** (debounce + cancelación de peticiones viejas con `AbortController`).
 - ✅ **`admin.js` (RESUELTO):** verificación de token única (guard clause), código muerto eliminado y un solo `DOMContentLoaded` concentrando todo el cableado de eventos.
 - ✅ **`Backend.http` (RESUELTO):** ahora contiene solicitudes reales de la API (login, lugares, categorías y creación con token) listas para ejecutar desde VS Code.
 - ✅ **Paginación (RESUELTO):** `GET /api/lugares` acepta `pagina` y `porPagina` (techo 50), responde con `{ lugares, paginacion }` usando `LIMIT/OFFSET` con `ORDER BY IdLugar`, y la vista pública muestra controles de navegación.

@@ -14,13 +14,22 @@ document.addEventListener("DOMContentLoaded", () => {
     // Regla de oro del frontend: TODO el cableado de eventos se registra
     // UNA sola vez, en la fase de arranque. La fase de render (mostrarLugares)
     // solo dibuja; si registrara listeners, se acumularian duplicados.
-    // Toda búsqueda nueva empieza desde la página 1.
-    document.getElementById("btnBuscar").addEventListener("click", () => cargarLugares(1));
 
-    // Bonus de usabilidad: la tecla Enter en el cuadro de busqueda tambien busca.
-    document.getElementById("inputBuscar").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") cargarLugares(1);
+    // ============================================================
+    // BÚSQUEDA EN VIVO con DEBOUNCE: consultamos cuando el dedo
+    // descansa ~400ms, no en cada tecla (evita ametrallar la API
+    // y las condiciones de carrera). El botón Buscar murió: la
+    // interfaz responde mientras piensas.
+    // ============================================================
+    let temporizadorBusqueda = null;
+    document.getElementById("inputBuscar").addEventListener("input", () => {
+        clearTimeout(temporizadorBusqueda);   // siguió escribiendo: reinicia el cronómetro
+        temporizadorBusqueda = setTimeout(() => cargarLugares(1), 400);
     });
+
+    // Cambiar de categoría también refresca al instante: es una
+    // acción deliberada (no tecleo), no necesita debounce.
+    document.getElementById("selectCategoria").addEventListener("change", () => cargarLugares(1));
 
     // Acceso al panel de administracion. Ya NO borramos el token aqui:
     // si la sesion es valida, admin.html entra directo; si no lo es,
@@ -50,6 +59,10 @@ async function cargarCategorias() {
     }
 }
 
+// Control de carrera: si llega una búsqueda nueva, colgamos la llamada
+// anterior antes de iniciarla (AbortController = "cuelga el teléfono").
+let controladorBusqueda = null;
+
 async function cargarLugares(pagina = 1) {
     const buscar = document.getElementById("inputBuscar").value;
     const idCategoria = document.getElementById("selectCategoria").value;
@@ -59,13 +72,23 @@ async function cargarLugares(pagina = 1) {
         url += `&idCategoria=${idCategoria}`;
     }
 
+    // ¿Hay una consulta anterior todavía volando? La colgamos: solo
+    // la intención más reciente merece pintarse (evita que una respuesta
+    // lenta y vieja pise los resultados frescos).
+    controladorBusqueda?.abort();
+    controladorBusqueda = new AbortController();
+
     try {
-        const respuesta = await fetch(url);
+        const respuesta = await fetch(url, { signal: controladorBusqueda.signal });
         const datos = await respuesta.json();
         mostrarLugares(datos.lugares);
         mostrarPaginacion(datos.paginacion);
     } catch (error) {
-        console.error("Error al consultar la API:", error);
+        // Los abortos son INTENCIONADOS (una búsqueda más nueva les ganó):
+        // no son errores, se ignoran en silencio.
+        if (error.name !== "AbortError") {
+            console.error("Error al consultar la API:", error);
+        }
     }
 }
 

@@ -73,22 +73,6 @@ header p {
     min-width: 180px;
 }
 
-.filtros-section button {
-    background-color: #0284c7;
-    color: white;
-    border: none;
-    padding: 0.8rem 1.8rem;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.filtros-section button:hover {
-    background-color: #0369a1;
-    transform: translateY(-1px);
-}
-
 /* Grid de Tarjetas */
 .grid-container {
     display: grid;
