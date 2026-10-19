@@ -213,6 +213,22 @@
         </div>
     </div>
 
+    <!-- Avisos flotantes (toasts): viven en la esquina y se van solos -->
+    <div id="contenedorToasts" class="toasts" aria-live="polite"></div>
+
+    <!-- Modal de confirmación elegante (reemplaza al confirm() nativo) -->
+    <div id="modalConfirmar" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content modal-confirmar-caja">
+            <div class="confirmar-icono">🗑️</div>
+            <h2 id="confirmarTitulo">¿Estás seguro?</h2>
+            <p id="confirmarMensaje"></p>
+            <div class="form-actions">
+                <button id="btnConfirmarNo" class="btn-secundario">Cancelar</button>
+                <button id="btnConfirmarSi" class="btn-primario btn-peligro">Sí, continuar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="auth.js"></script>
     <script src="admin.js"></script>
 </body>

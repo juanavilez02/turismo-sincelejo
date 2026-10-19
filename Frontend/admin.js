@@ -132,7 +132,7 @@ async function subirImagenSeleccionada() {
     if (!archivo) return;
 
     if (archivo.size > 2 * 1024 * 1024) {
-        alert("La imagen no puede pesar más de 2 MB.");
+        mostrarToast("La imagen no puede pesar más de 2 MB.", "error");
         input.value = "";
         return;
     }
@@ -153,10 +153,10 @@ async function subirImagenSeleccionada() {
             const resultado = await respuesta.json();
             document.getElementById("formImagen").value = resultado.url;
             mostrarPreviewImagen();
-            alert("Imagen subida: la URL quedó asignada al lugar.");
+            mostrarToast("Imagen subida: la URL quedó asignada al lugar.");
             input.value = "";
         } else if (!manejarSesionExpirada(respuesta)) {
-            alert("No se pudo subir la imagen.");
+            mostrarToast("No se pudo subir la imagen.", "error");
         }
     } catch (error) {
         console.error("Error subiendo imagen:", error);
@@ -254,14 +254,14 @@ async function guardarCategoria(e) {
         });
 
         if (respuesta.ok) {
-            alert(esEdicion ? "Categoría actualizada correctamente" : "Categoría creada correctamente");
+            mostrarToast(esEdicion ? "Categoría actualizada correctamente" : "Categoría creada correctamente");
             cerrarModalCategoria();
             cargarTablaCategorias();
             cargarCategoriasForm(); // el select del formulario de lugares se refresca también
         } else if (!manejarSesionExpirada(respuesta)) {
             // Mostramos el mensaje que manda la API (ej: "el nombre es obligatorio")
             const error = await respuesta.json().catch(() => null);
-            alert(error?.mensaje ?? "Error al procesar la solicitud");
+            mostrarToast(error?.mensaje ?? "Error al procesar la solicitud", "error");
         }
     } catch (error) {
         console.error("Error al guardar la categoría:", error);
@@ -269,7 +269,7 @@ async function guardarCategoria(e) {
 }
 
 async function eliminarCategoria(id) {
-    if (!confirm("¿Eliminar esta categoría? (Solo es posible si no tiene lugares asociados)")) return;
+    if (!(await confirmar("¿Eliminar esta categoría? Solo es posible si no tiene lugares asociados.", "Eliminar categoría"))) return;
 
     try {
         const respuesta = await fetch(`${API_URL}/categorias/${id}`, {
@@ -278,13 +278,13 @@ async function eliminarCategoria(id) {
         });
 
         if (respuesta.ok) {
-            alert("Categoría eliminada correctamente");
+            mostrarToast("Categoría eliminada correctamente");
             cargarTablaCategorias();
             cargarCategoriasForm();
         } else if (!manejarSesionExpirada(respuesta)) {
             // Aquí brilla el conteo del backend: "tiene N lugares asociados..."
             const error = await respuesta.json().catch(() => null);
-            alert(error?.mensaje ?? "No se pudo eliminar la categoría");
+            mostrarToast(error?.mensaje ?? "No se pudo eliminar la categoría", "error");
         }
     } catch (error) {
         console.error("Error al eliminar la categoría:", error);
@@ -356,7 +356,7 @@ async function guardarLugar(e) {
 
     // Validación de imagen en JS (el campo vive en pestañas: archivo o URL)
     if (!document.getElementById("formImagen").value.trim()) {
-        alert("El lugar necesita una imagen: sube un archivo o pega una URL.");
+        mostrarToast("El lugar necesita una imagen: sube un archivo o pega una URL.", "error");
         return;
     }
 
@@ -382,11 +382,11 @@ async function guardarLugar(e) {
         });
 
         if (respuesta.ok) {
-            alert(esEdicion ? "Lugar actualizado correctamente" : "Lugar guardado correctamente");
+            mostrarToast(esEdicion ? "Lugar actualizado correctamente" : "Lugar guardado correctamente");
             cerrarModal();
             cargarTablaLugares();
         } else if (!manejarSesionExpirada(respuesta)) {
-            alert("Error al procesar la solicitud");
+            mostrarToast("Error al procesar la solicitud", "error");
         }
     } catch (error) {
         console.error("Error al guardar:", error);
@@ -394,22 +394,23 @@ async function guardarLugar(e) {
 }
 
 async function eliminarLugar(id) {
-    if (confirm("¿Estás seguro de que deseas eliminar este lugar de la base de datos?")) {
-        try {
-            const respuesta = await fetch(`${API_URL}/lugares/${id}`, {
-                method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` }
-            });
+    // El await PAUSA esta función hasta que el usuario decida en el modal
+    // elegante — el flujo se lee como lenguaje natural.
+    if (!(await confirmar("¿Eliminar este lugar de la base de datos? Esta acción no se puede deshacer.", "Eliminar lugar"))) return;
 
-            if (respuesta.ok) {
-                alert("Lugar eliminado correctamente");
-                cargarTablaLugares();
-            } else if (!manejarSesionExpirada(respuesta)) {
-                alert("No se pudo eliminar el lugar");
-            }
-        } catch (error) {
-            console.error("Error al eliminar:", error);
+    try {
+        const respuesta = await fetch(`${API_URL}/lugares/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (respuesta.ok) {
+            mostrarToast("Lugar eliminado correctamente");
+            cargarTablaLugares();
+        } else if (!manejarSesionExpirada(respuesta)) {
+            mostrarToast("No se pudo eliminar el lugar", "error");
         }
+    } catch (error) {
+        console.error("Error al eliminar:", error);
     }
-    
 }

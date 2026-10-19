@@ -820,3 +820,93 @@ table img {
         grid-template-columns: 1fr;     /* móvil: KPIs apilados */
     }
 }
+
+/* ================================================================
+   10. TOASTS Y CONFIRMACIÓN ELEGANTE
+   ================================================================ */
+.toasts {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    z-index: 3000;            /* por encima de modales y de la sidebar */
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.2rem;
+    border-radius: 12px;
+    background: var(--tinta);
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 500;
+    max-width: 340px;
+    box-shadow: 0 14px 35px rgba(15, 23, 42, 0.4);
+    animation: toast-entrada 0.3s ease-out;
+}
+
+.toast-exito {
+    border-left: 4px solid #10B981;
+}
+
+.toast-error {
+    border-left: 4px solid var(--peligro);
+}
+
+.toast-saliendo {
+    animation: toast-salida 0.3s ease forwards;
+}
+
+@keyframes toast-entrada {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-salida {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(40px); }
+}
+
+/* ---------- Modal de confirmación ---------- */
+.modal-confirmar-caja {
+    width: min(100%, 420px);
+    text-align: center;
+}
+
+.confirmar-icono {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    background: var(--peligro-suave);
+    font-size: 1.8rem;
+}
+
+.modal-confirmar-caja h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.2rem;
+}
+
+.modal-confirmar-caja p {
+    color: var(--tinta-suave);
+    font-size: 0.92rem;
+    margin-bottom: 1.4rem;
+}
+
+.btn-peligro {
+    background: var(--peligro) !important;
+}
+
+.btn-peligro:hover {
+    background: #B91C1C !important;
+}
+
+.modal-confirmar-caja .form-actions {
+    justify-content: center;
+}
