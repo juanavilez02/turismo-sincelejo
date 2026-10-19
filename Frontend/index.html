@@ -12,6 +12,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="styles.css">
+
+    <!-- Leaflet: la librería de mapas open-source (versión fijada, siempre) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
 
@@ -77,6 +80,15 @@
         <div id="paginacion" class="paginacion"></div>
     </main>
 
+    <!-- ============ MAPA INTERACTIVO DE SINCELEJO ============ -->
+    <section class="mapa-seccion" aria-label="Mapa con los lugares turísticos">
+        <div class="mapa-encabezado">
+            <h2>Explora Sincelejo en el mapa</h2>
+            <p>Los lugares de la Sabana sobre el terreno real. Toca un pin para conocerlo.</p>
+        </div>
+        <div id="mapaLugares" class="mapa-contenedor"></div>
+    </section>
+
     <!-- ============ FOOTER ============ -->
     <footer class="footer">
         <div class="footer-grid">
@@ -121,6 +133,7 @@
         <p class="footer-copy">© 2026 Turismo Sincelejo — Todos los derechos reservados</p>
     </footer>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

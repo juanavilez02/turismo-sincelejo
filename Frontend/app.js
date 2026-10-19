@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarCategorias();
     cargarLugares();
     iniciarHero();
+    iniciarMapa();
 
     // ============ BÚSQUEDA EN VIVO (debounce 400ms) ============
     let temporizadorBusqueda = null;
@@ -197,11 +198,11 @@ function aplicarVistaFavoritos() {
     const filtrados = lugaresActuales.filter(l => obtenerFavoritos().has(l.idLugar));
     if (filtrados.length === 0) {
         renderTarjetas([]);
-        // En la vista de favoritos usamos el estado vacío sin botón de filtros
         renderEstadoVacio(false);
     } else {
         renderTarjetas(filtrados);
     }
+    actualizarPinesMapa(filtrados);   // el mapa refleja la vista de favoritos
     document.getElementById("paginacion").innerHTML = "";   // vista local: sin páginas
 }
 
@@ -237,9 +238,13 @@ async function cargarLugares(pagina = 1) {
             renderTarjetas(datos.lugares);
             mostrarPaginacion(datos.paginacion);
         }
+
+        // El mapa siempre refleja lo que está en pantalla
+        actualizarPinesMapa(datos.lugares);
     } catch (error) {
         if (error.name !== "AbortError") {
             renderEstadoError();
+            actualizarPinesMapa([]);
         }
     }
 }
@@ -351,4 +356,100 @@ function mostrarPaginacion(p) {
     }
 
     contenedor.appendChild(crearBoton("Siguiente →", p.pagina + 1, p.pagina === p.totalPaginas));
+}
+
+// ==================== MAPA INTERACTIVO (Leaflet) ====================
+// Sincelejo en el mapa: los lugares de la API como pines clickeables.
+let mapa = null;            // la instancia de Leaflet (nace UNA sola vez)
+let capaLugares = null;      // la capa de pines (se limpia y repuebla en cada carga)
+
+function iniciarMapa() {
+    // El corazón de Sincelejo: Parque Santander (9.3045, -75.3966)
+    mapa = L.map("mapaLugares", {
+        scrollWheelZoom: false   // UX: sin esto la rueda del mouse queda secuestrada
+                                 // por el mapa al pasar por encima. Zoom: con botones.
+    }).setView([9.3045, -75.3966], 14);
+
+    // Los "tiles" (los dibujitos del terreno) vienen de OpenStreetMap:
+    // gratis, sin API key. Solo pedimos el crédito que la licencia exige.
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(mapa);
+
+    capaLugares = L.layerGroup().addTo(mapa);
+}
+
+// Puebla el mapa con los pines de la lista recibida.
+async function actualizarPinesMapa(lugares) {
+    if (!mapa) return;
+    capaLugares.clearLayers();
+
+    let pines = 0;
+    for (const lugar of lugares) {
+        let coords = leerCacheGeo(lugar.nombre);
+
+        if (!coords) {
+            coords = await geocodificar(lugar);
+            if (!coords) continue;        // no ubicable → no pin (su tarjeta sigue igual)
+            await esperar(1100);          // cortesía con Nominatim: máx 1 petición/segundo
+        }
+
+        capaLugares.addLayer(crearPin(lugar, coords));
+        pines++;
+    }
+
+    // Encuadre automático: que todos los pines queden a la vista
+    if (pines > 0) {
+        mapa.fitBounds(capaLugares.getBounds().pad(0.25));
+    }
+}
+
+function crearPin(lugar, coords) {
+    const urlMapa = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lugar.nombre + ' Sincelejo ' + lugar.direccion)}`;
+    const imagen = lugar.imagen
+        ? `<img src="${lugar.imagen}" alt="${lugar.nombre}" onerror="this.style.display='none'">`
+        : "";
+
+    return L.marker(coords).bindPopup(`
+        <div class="popup-mapa">
+            ${imagen}
+            <strong>${lugar.nombre}</strong>
+            <span class="popup-categoria">${lugar.categoria}</span><br>
+            <a href="${urlMapa}" target="_blank" rel="noopener noreferrer">Cómo llegar →</a>
+        </div>
+    `);
+}
+
+// ---------- Geocodificación: nombre → coordenadas ----------
+// Nominatim (OpenStreetMap) convierte "Plaza Majagual, Sincelejo" en lat/long.
+// Es gratis y sin API key, pero su etiqueta de uso pide MÁXIMO 1 petición por
+// segundo: por eso consultamos en fila con separación y guardamos cada
+// coordenada en localStorage PARA SIEMPRE (cada lugar se geocodifica 1 vez).
+function leerCacheGeo(nombre) {
+    const cache = localStorage.getItem(`geo:${nombre}`);
+    if (!cache) return null;
+    try { return JSON.parse(cache); }
+    catch { return null; }   // cache corrupto: se recalcula
+}
+
+async function geocodificar(lugar) {
+    try {
+        const consulta = encodeURIComponent(`${lugar.nombre}, Sincelejo, Sucre, Colombia`);
+        const respuesta = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${consulta}`);
+        const resultados = await respuesta.json();
+
+        if (resultados.length > 0) {
+            const coords = [parseFloat(resultados[0].lat), parseFloat(resultados[0].lon)];
+            localStorage.setItem(`geo:${lugar.nombre}`, JSON.stringify(coords));
+            return coords;
+        }
+    } catch (error) {
+        console.warn("Geocodificación falló para:", lugar.nombre, error);
+    }
+    return null;
+}
+
+function esperar(ms) {
+    return new Promise(resolver => setTimeout(resolver, ms));
 }
