@@ -38,21 +38,47 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnCancelarCategoria").addEventListener("click", cerrarModalCategoria);
     document.getElementById("formCategoriaModal").addEventListener("submit", guardarCategoria);
 
-    // Sidebar (rediseño Fase 2): menú móvil, navegación suave y acción rápida
+    // Sidebar (móvil): abrir/cerrar centralizado, clic-fuera para cerrar
+    // y navegación suave. Todo pasa por abrirSidebar/cerrarSidebar para
+    // que overlay y cajón siempre se muevan juntos.
     const sidebar = document.getElementById("sidebar");
-    document.getElementById("btnMenuMovil").addEventListener("click", () => sidebar.classList.toggle("abierta"));
-    document.getElementById("btnNuevoLugarNav").addEventListener("click", () => {
+    const overlaySidebar = document.getElementById("overlaySidebar");
+
+    const abrirSidebar = () => {
+        sidebar.classList.add("abierta");
+        overlaySidebar.classList.add("visible");
+    };
+
+    const cerrarSidebar = () => {
         sidebar.classList.remove("abierta");
+        overlaySidebar.classList.remove("visible");
+    };
+
+    // El botón ☰ alterna: abierto → cierra; cerrado → abre
+    document.getElementById("btnMenuMovil").addEventListener("click", () => {
+        sidebar.classList.contains("abierta") ? cerrarSidebar() : abrirSidebar();
+    });
+
+    // EL pedido del usuario: tocar la zona sombreada FUERA del menú lo cierra
+    overlaySidebar.addEventListener("click", cerrarSidebar);
+
+    // Bonus de accesibilidad: la tecla Escape también lo cierra
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") cerrarSidebar();
+    });
+
+    document.getElementById("btnNuevoLugarNav").addEventListener("click", () => {
+        cerrarSidebar();
         abrirModalCrear();
     });
     document.getElementById("btnNuevaCategoriaNav").addEventListener("click", () => {
-        sidebar.classList.remove("abierta");
+        cerrarSidebar();
         abrirModalCrearCategoria();
     });
     document.querySelectorAll(".nav-item[data-seccion]").forEach(item => {
         item.addEventListener("click", () => {
             document.querySelector(item.dataset.seccion).scrollIntoView({ behavior: "smooth" });
-            sidebar.classList.remove("abierta");   // en móvil: navegar cierra el cajón
+            cerrarSidebar();   // en móvil: navegar cierra el cajón
         });
     });
 

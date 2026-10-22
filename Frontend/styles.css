@@ -923,3 +923,45 @@ img {
 .leaflet-tooltip.tooltip-pin::before {
     display: none;   /* fuera la flechita: etiqueta flotante limpia */
 }
+
+/* ================================================================
+   17. MÓVIL: chips en fila deslizable (el patrón de YouTube/Instagram)
+   Una sola fila que se desliza con el dedo — cero apilamiento vertical.
+   ================================================================ */
+@media (max-width: 719px) {
+    .chips-seccion {
+        position: relative;
+        margin-bottom: 1.7rem;
+    }
+
+    .chips {
+        justify-content: flex-start;
+        flex-wrap: nowrap;                 /* UNA sola fila, sin apilarse */
+        overflow-x: auto;                  /* deslizable con el dedo */
+        -webkit-overflow-scrolling: touch; /* deslizamiento suave en iOS */
+        scrollbar-width: none;             /* sin barra de scroll (Firefox) */
+        gap: 0.5rem;
+    }
+
+    .chips::-webkit-scrollbar {
+        display: none;                     /* sin barra (Chrome/Safari) */
+    }
+
+    .chip {
+        flex-shrink: 0;                    /* los chips jamás se encogen */
+        padding: 0.45rem 0.95rem;
+        font-size: 0.8rem;
+    }
+
+    /* Degradado al borde derecho: el "hay más allá" que invita a deslizar */
+    .chips-seccion::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 34px;
+        background: linear-gradient(90deg, transparent, var(--fondo));
+        pointer-events: none;   /* decorativo: nunca intercepta toques */
+    }
+}
