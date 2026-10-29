@@ -23,6 +23,8 @@
     --acento-oscuro: #D97706;
     --fondo: #F8FAFC;               /* neutro claro */
     --tinta: #0F172A;               /* texto principal (slate-900) */
+    --tinta-fija: #0F172A;          /* tinta oscura que NO se invierte en modo oscuro:
+                                       para fondos donde el texto claro siempre gana */
     --tinta-media: #475569;         /* texto secundario */
     --tinta-suave: #64748B;         /* texto terciario */
     --borde: #E2E8F0;
@@ -112,7 +114,7 @@ img {
     gap: 0.5rem;
     padding: 0.5rem 1.1rem;
     border-radius: var(--radio-pill);
-    background: var(--tinta);
+    background: var(--tinta-fija);   /* tinta fija: oscura también en modo oscuro */
     color: #fff;
     text-decoration: none;
     font-size: 0.85rem;
@@ -418,7 +420,7 @@ img {
 
 /* ---------- 8. Footer ---------- */
 .footer {
-    background: var(--tinta);
+    background: var(--tinta-fija);   /* el footer SIEMPRE oscuro: sus textos claros lo exigen */
     color: #CBD5E1;
     padding: 3.5rem 1.5rem 1.5rem;
 }
@@ -773,6 +775,24 @@ img {
 
 [data-tema="oscuro"] .chip.activo {
     box-shadow: 0 6px 14px rgba(45, 212, 191, 0.3);
+}
+
+/* El botón del panel en modo oscuro: superficie oscura + borde, igual que
+   su vecino el botón del tema. Sin esto era blanco con letras blancas
+   (la --tinta se invierte y se usaba como fondo: cruce de roles de token). */
+[data-tema="oscuro"] .btn-admin-nav {
+    background: var(--superficie);
+    border: 1.5px solid var(--borde);
+}
+
+[data-tema="oscuro"] .btn-admin-nav:hover {
+    background: var(--primario);
+    color: #0F172A;
+}
+
+/* El footer se mantiene oscuro en modo oscuro (sus textos son claros) */
+[data-tema="oscuro"] .footer {
+    background: var(--tinta-fija);
 }
 
 /* ================================================================
